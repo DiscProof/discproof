@@ -1,0 +1,78 @@
+[project]
+name = "perfect-audio-copy"
+version = "0.1.0.dev0"
+description = "Secure, verified audio CD ripping to FLAC for the Linux desktop"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: X11 Applications :: Qt",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Sound/Audio :: CD Audio :: CD Ripping",
+]
+# PySide6 is intentionally NOT a hard dependency: on Fedora KDE we use the
+# distro's python3-pyside6 so the app runs on the system Qt and can load the
+# Breeze (org.kde.desktop) style and Kirigami. Use the `qt-wheel` extra elsewhere.
+dependencies = [
+    "numpy>=1.26",
+    "mutagen>=1.47",
+    "httpx>=0.27",
+    "pyudev>=0.24",
+]
+
+[project.optional-dependencies]
+qt-wheel = ["PySide6>=6.6"]
+
+[project.scripts]
+perfect-audio-copy = "perfect_audio_copy.app:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/perfect_audio_copy"]
+
+# ---------------------------------------------------------------- tooling
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "PL"]
+ignore = ["PLR2004"]  # magic numbers are everywhere in SCSI/MMC code
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR0913", "PLC0415"]  # late imports after pytest.importorskip
+"src/perfect_audio_copy/app.py" = ["PLC0415"]  # Qt imported lazily so --version works headless
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+packages = ["perfect_audio_copy"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+# Fedora's python3-pyside6 ships without py.typed/stubs (the PyPI wheel has them).
+module = ["pyudev.*", "PySide6.*", "shiboken6.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers -p no:anyio"  # anyio plugin leaks in from system site-packages
+markers = [
+    "ui: launches the Qt/QML user interface (offscreen)",
+    "hardware: needs a real optical drive and disc (never run in CI)",
+]
