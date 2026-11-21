@@ -3,7 +3,7 @@
 Secure, verified audio CD ripping to FLAC for the Linux desktop (Fedora KDE Plasma first).
 It is inspired by Exact Audio Copy: it re-reads and compares sectors, corrects the drive's read offset, verifies rips against AccurateRip, looks up metadata on MusicBrainz and Discogs, and writes Plex-ready album folders.
 
-> **Status:** pre-alpha. Phase 0 (project scaffolding) is complete. See [docs/PLAN.md](docs/PLAN.md) for the roadmap and [docs/BUILD_PROMPT.md](docs/BUILD_PROMPT.md) for the full spec.
+> **Status:** pre-alpha. Phases 0 (scaffolding) and 1 (drive layer) are complete. See [docs/PLAN.md](docs/PLAN.md) for the roadmap and [docs/BUILD_PROMPT.md](docs/BUILD_PROMPT.md) for the full spec.
 
 ## Development setup (Fedora)
 
@@ -27,6 +27,21 @@ Run all checks (ruff, mypy, pytest):
 ```bash
 scripts/ci.sh
 ```
+
+Probe a real drive and disc (TOC, CD-Text, ISRC/MCN, C2 support, test read):
+
+```bash
+.venv/bin/perfect-audio-copy-probe /dev/sr0 --read-test
+```
+
+See [docs/TESTING.md](docs/TESTING.md) for the hardware checklist.
+
+### Drive permissions
+
+PAC talks to the drive directly using SCSI commands, through the kernel's SG_IO interface on `/dev/sr*`.
+On a Plasma desktop, logind already gives the logged-in user read/write access.
+Over SSH or on a headless system, add the user to the `cdrom` group instead.
+If only read access is available, ripping still works, but drive speed control is disabled.
 
 On distributions without a system PySide6, install the wheel instead with `pip install -e '.[qt-wheel]'`.
 The app then falls back to the Fusion style.

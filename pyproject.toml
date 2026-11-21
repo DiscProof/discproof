@@ -27,6 +27,7 @@ qt-wheel = ["PySide6>=6.6"]
 
 [project.scripts]
 perfect-audio-copy = "perfect_audio_copy.app:main"
+perfect-audio-copy-probe = "perfect_audio_copy.drive.probe:main"
 
 [dependency-groups]
 dev = [
@@ -51,10 +52,15 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "PL"]
-ignore = ["PLR2004"]  # magic numbers are everywhere in SCSI/MMC code
+ignore = [
+    "PLR2004",  # magic numbers are everywhere in SCSI/MMC code
+    "PLR0911",  # byte-format parsers naturally have many returns/branches
+    "PLR0912",
+    "PLR0913",  # keyword-only constructors with injectable clocks etc.
+]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["PLR0913", "PLC0415"]  # late imports after pytest.importorskip
+"tests/**" = ["PLC0415", "PLR0917"]  # late imports after pytest.importorskip
 "src/perfect_audio_copy/app.py" = ["PLC0415"]  # Qt imported lazily so --version works headless
 
 [tool.mypy]
