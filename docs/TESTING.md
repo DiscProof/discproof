@@ -6,7 +6,9 @@
 scripts/ci.sh
 ```
 
-This runs ruff, mypy (strict) and pytest. The drive layer is tested against `tests/drive/fakes.py`, a fake transport that returns byte-exact MMC responses. Those responses cover the TOC, full TOC, CD-Text packs with CRCs, sense data, READ CD with C2 pointers, and the Q sub-channel.
+This runs ruff, mypy (strict) and pytest. The drive layer is tested against `tests/drive/fakes.py`, a fake transport that returns byte-exact MMC responses. Those responses cover the TOC, full TOC, CD-Text packs with CRCs, sense data, READ CD with C2 pointers (in either field order), and the Q sub-channel.
+
+The extraction engine is tested against `VirtualDrive` (`engine/virtual.py`), which serves a synthetic disc and simulates read offsets, overread support, jitter, a drive cache (including one that ignores FUA), weak/bad/unreadable sectors, accurate or lying C2 pointers, and speed-dependent error rates. The integration tests in `tests/engine/test_extract.py` require secure mode to produce bit-identical tracks under all of these, report unrecoverable sectors at the right track timestamps, and flag every sector burst mode gets wrong.
 
 ## Hardware checklist
 
@@ -26,6 +28,10 @@ Plug in the drive, insert a commercially pressed audio CD, then work through the
 3. Run `PAC_TEST_DRIVE=/dev/sr0 .venv/bin/pytest -m hardware -v`.
 
 Please save the probe output for each drive you own. It is the baseline for the Phase 3 feature-detection work.
+
+### Phase 2 — extraction engine
+
+The hardware run above includes `test_secure_rip_is_repeatable`, which secure-rips the shortest audio track twice with the default (conservative) drive profile and checks that both CRCs match and nothing was suspicious. Expect it to take about a minute: with cache defeat, secure mode runs at roughly a third of the drive's speed.
 
 ### Later phases
 

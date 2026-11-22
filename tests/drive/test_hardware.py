@@ -63,3 +63,17 @@ def test_c2_and_q_layout(drive: Drive) -> None:
         if isinstance(pos, QPosition) and pos.crc_ok and pos.absolute_lba == start + i:
             good += 1
     assert good >= 8, f"only {good}/10 Q records decoded to their own LBA"
+
+
+def test_secure_rip_is_repeatable(drive: Drive) -> None:
+    """Secure-rip the shortest audio track twice; the CRCs must match. Uses the
+    conservative default profile (cache assumed, defeated by seeking away)."""
+    from perfect_audio_copy.engine import DriveProfile, ExtractionSettings, Extractor, Quality
+
+    toc = drive.read_toc()
+    shortest = min(toc.audio_tracks, key=lambda t: toc.length(t.number))
+    settings = ExtractionSettings(tracks=(shortest.number,), quality=Quality.LOW)
+    first = Extractor(drive, DriveProfile(), settings, toc=toc).run()
+    second = Extractor(drive, DriveProfile(), settings, toc=toc).run()
+    assert first.tracks[0].crc32 == second.tracks[0].crc32
+    assert first.ok, f"suspicious positions: {first.tracks[0].suspicious}"
