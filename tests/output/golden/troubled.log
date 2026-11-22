@@ -1,0 +1,114 @@
+Perfect Audio Copy 0.1.0 extraction logfile from 22 November 2026, 14:03
+
+Uncle Tupelo / Anodyne "Deluxe" (disc 2 of 2)
+
+Used drive  : HL-DT-ST DVDRAM GP75N (firmware 1.01)
+
+Read mode               : Secure (fast: C2-guided)
+Utilize accurate stream : Yes
+Defeat audio cache      : No (drive does not cache audio)
+Make use of C2 pointers : Yes
+
+Read offset correction                      : 6
+Overread into Lead-In and Lead-Out          : No
+Fill up missing offset samples with silence : Yes
+Gap handling                                : Appended to previous track
+Error recovery quality                      : Medium (up to 3 rounds of 16 reads)
+Test & Copy                                 : Yes
+Hidden track one audio                      : Ripped as track 00 (0:20.00)
+
+Used output format : FLAC (flac -8 --verify)
+ReplayGain         : No
+
+MusicBrainz disc ID : ja.BwnUGq1ZK9zJWEzpsQhrOips-
+FreeDB/CDDB disc ID : 910d690c
+AccurateRip disc ID : dBAR-003-0000a1b2-0001c3d4-910d690c.bin
+Metadata source     : MusicBrainz release 16f91bd3-af0d-4f20-b9ea-f30deabb05d4
+
+
+TOC of the extracted CD
+
+     Track |   Start  |  Length  | Start sector | End sector
+    ---------------------------------------------------------
+         1 |  0:20.00 |  3:04.12 |         1500 |      15311
+         2 |  3:24.12 |  2:34.42 |        15312 |      26903
+         3 |  5:58.54 |  3:11.21 |        26904 |      41249
+
+
+Hidden track
+
+     Filename 00 - Hidden Track.flac
+
+     Peak level 98.0 %
+     Extraction speed 4.2 X
+     Re-read sectors 0
+     Test CRC 1A2B3C40
+     Copy CRC 1A2B3C40
+     AccurateRip: not applicable to the hidden track
+     Copy OK
+
+
+Track  1
+
+     Filename 01 - Slate.flac
+
+     Pre-gap length  unknown (not detected)
+
+     Peak level 98.0 %
+     Extraction speed 4.2 X
+     Re-read sectors 0
+     Test CRC 1A2B3C41
+     Copy CRC 1A2B3C41
+     Accurately ripped (confidence 12, v1+v2)  [v1 284FC706, v2 DC77F9AC]
+     Copy OK
+
+
+Track  2
+
+     Filename 02 - Acuff-Rose.flac
+
+     Pre-gap length  0:02.00
+
+     Peak level 98.0 %
+     Extraction speed 4.2 X
+     Re-read sectors 40
+     Test CRC DEADBEEF
+     Copy CRC 1A2B3C42
+     Test and Copy CRCs differ
+     Suspicious position 0:12.34
+     Suspicious position 0:12.35
+     Cannot be verified as accurate (database confidence 12)  [v1 284FC707, v2 DC77F9AD]
+     Copy finished with errors
+
+
+Track  3
+
+     Filename 03 - The Long Cut.flac
+
+     Pre-gap length  0:00.00
+
+     Peak level 98.0 %
+     Extraction speed 4.2 X
+     Re-read sectors 0
+     Samples filled with silence (offset) 6
+     Test CRC 1A2B3C43
+     Copy CRC 1A2B3C43
+     Cannot be verified as accurate (database confidence 12)  [v1 284FC708, v2 DC77F9AE]
+     Error: flac failed for track 3: disk full
+     Copy finished with errors
+
+
+AccurateRip summary
+
+Track  1  accurately ripped (confidence 12, v1+v2)
+Track  2  cannot be verified as accurate
+Track  3  cannot be verified as accurate
+
+2 track(s) not verified, 1 accurately ripped
+Track(s) 2, 3 match a different pressing (offset -120 samples)
+
+There were errors
+
+End of status report
+
+==== Log checksum 71F50CAF30F5903493FDEA9A41628684D3EEF693D9C2DF5E0C5415C2FCB6AD38 ====

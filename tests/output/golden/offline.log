@@ -1,0 +1,59 @@
+Perfect Audio Copy 0.1.0 extraction logfile from 22 November 2026, 14:03
+
+Uncle Tupelo / Anodyne "Deluxe"
+
+Used drive  : HL-DT-ST DVDRAM GP75N (firmware 1.01)
+
+Read mode               : Secure
+Utilize accurate stream : Yes
+Defeat audio cache      : Yes (reading elsewhere, 256 sectors)
+Make use of C2 pointers : No
+
+Read offset correction                      : 6
+Overread into Lead-In and Lead-Out          : No
+Fill up missing offset samples with silence : Yes
+Gap handling                                : Appended to previous track
+Error recovery quality                      : High (up to 5 rounds of 16 reads)
+Test & Copy                                 : No
+Hidden track one audio                      : None
+
+Used output format : FLAC (flac -8 --verify)
+ReplayGain         : Album and track
+
+MusicBrainz disc ID : ja.BwnUGq1ZK9zJWEzpsQhrOips-
+FreeDB/CDDB disc ID : 910d690c
+AccurateRip disc ID : dBAR-003-0000a1b2-0001c3d4-910d690c.bin
+MCN                 : 0075994542423
+Metadata source     : Entered manually
+
+
+TOC of the extracted CD
+
+     Track |   Start  |  Length  | Start sector | End sector
+    ---------------------------------------------------------
+         1 |  0:00.00 |  3:24.12 |            0 |      15311
+         2 |  3:24.12 |  2:34.42 |        15312 |      26903
+         3 |  5:58.54 |  3:11.21 |        26904 |      41249
+
+
+Track  1
+
+     Filename 01 - Slate.flac
+
+     Pre-gap length  unknown (not detected)
+
+     Peak level 98.0 %
+     Extraction speed 4.2 X
+     Re-read sectors 0
+     Copy CRC 1A2B3C41
+     AccurateRip: not checked (AccurateRip unreachable: no route to host)
+     Copy OK
+
+
+AccurateRip was not checked: AccurateRip unreachable: no route to host
+
+Extraction was cancelled
+
+End of status report
+
+==== Log checksum D3283853EC3D292C0E6B8B460B1D5F3D79F4CAD6B845546F049F80F5FFA9FB4E ====

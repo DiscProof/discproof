@@ -73,6 +73,11 @@ packages = ["perfect_audio_copy"]
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
+# mutagen ships partial annotations; its untyped calls stay inside this module.
+module = ["perfect_audio_copy.output.tags"]
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
 # Fedora's python3-pyside6 ships without py.typed/stubs (the PyPI wheel has them).
 module = ["pyudev.*", "PySide6.*", "shiboken6.*"]
 ignore_missing_imports = true

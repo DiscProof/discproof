@@ -14,6 +14,8 @@ Verification is tested against published whipper vectors (AccurateRip and CDDB d
 
 Metadata is tested against responses recorded once from the live services for the MusicBrainz documentation example disc (`49HHV7Eb8UKF3aQiNmu1GR8vKTY-`): the MusicBrainz disc ID and TOC lookups, its Cover Art Archive listing, and the same release on Discogs. The disc ID algorithm is checked against that documented example.
 
+Output is tested with golden CUE and log files (`tests/output/golden`; regenerate with `UPDATE_GOLDEN=1` and review the diff), a bit-exact FLAC encode/decode round trip, and a full album written from a VirtualDrive rip.
+
 ## Hardware checklist
 
 Plug in the drive, insert a commercially pressed audio CD, then work through the list.
@@ -64,6 +66,17 @@ print(svc.cover(res.releases[res.preselected or 0]))"
 Check that a common pressed CD is found by disc ID (`exact=True`) and preselected, that the track titles match the case, and that a cover of at least 1000 px is found. Compare the disc ID with what MusicBrainz shows for that release. A disc that MusicBrainz doesn't know should fall back to a TOC match, then Discogs (by its MCN), then CD-Text.
 
 The User-Agent carries a placeholder contact URL (`PROJECT_URL` in `src/perfect_audio_copy/__init__.py`) until the project has a public home. Replace it before release.
+
+### Phase 5 — output
+
+Rip one short track end to end (drive, metadata, AccurateRip, FLAC, tags, cover, CUE, log) into a test folder, then check:
+
+- the FLAC file decodes and plays; `metaflac --list --block-type=VORBIS_COMMENT,PICTURE` shows the tags (Picard mapping: `MUSICBRAINZ_TRACKID` is the recording MBID), ReplayGain values and a 1000 px front cover;
+- `cover.jpg` is at most 1500 px;
+- the log says "Accurately ripped" for a disc in AccurateRip, and its checksum verifies (`perfect_audio_copy.output.log.verify_log`);
+- the CUE sheet names the FLAC files that are next to it.
+
+On 2026-11-22 this was done with the HL-DT-ST GP75N (offset +6, cache defeated by reading elsewhere) on Uncle Tupelo's *Anodyne*, track 2: accurately ripped, confidence 112 (v1 and v2), at 1.2x.
 
 ### Later phases
 

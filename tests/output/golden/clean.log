@@ -1,0 +1,93 @@
+Perfect Audio Copy 0.1.0 extraction logfile from 22 November 2026, 14:03
+
+Uncle Tupelo / Anodyne "Deluxe"
+
+Used drive  : HL-DT-ST DVDRAM GP75N (firmware 1.01)
+
+Read mode               : Secure
+Utilize accurate stream : Yes
+Defeat audio cache      : Yes (reading elsewhere, 256 sectors)
+Make use of C2 pointers : No
+
+Read offset correction                      : 6
+Overread into Lead-In and Lead-Out          : No
+Fill up missing offset samples with silence : Yes
+Gap handling                                : Appended to previous track
+Error recovery quality                      : High (up to 5 rounds of 16 reads)
+Test & Copy                                 : No
+Hidden track one audio                      : None
+
+Used output format : FLAC (flac -8 --verify)
+ReplayGain         : Album and track
+
+MusicBrainz disc ID : ja.BwnUGq1ZK9zJWEzpsQhrOips-
+FreeDB/CDDB disc ID : 910d690c
+AccurateRip disc ID : dBAR-003-0000a1b2-0001c3d4-910d690c.bin
+MCN                 : 0075994542423
+Metadata source     : MusicBrainz release 16f91bd3-af0d-4f20-b9ea-f30deabb05d4
+
+
+TOC of the extracted CD
+
+     Track |   Start  |  Length  | Start sector | End sector
+    ---------------------------------------------------------
+         1 |  0:00.00 |  3:24.12 |            0 |      15311
+         2 |  3:24.12 |  2:34.42 |        15312 |      26903
+         3 |  5:58.54 |  3:11.21 |        26904 |      41249
+
+
+Track  1
+
+     Filename 01 - Slate.flac
+
+     Pre-gap length  unknown (not detected)
+
+     Peak level 98.0 %
+     Extraction speed 4.2 X
+     Re-read sectors 0
+     Copy CRC 1A2B3C41
+     Accurately ripped (confidence 12, v1+v2)  [v1 284FC706, v2 DC77F9AC]
+     Copy OK
+
+
+Track  2
+
+     Filename 02 - Acuff-Rose.flac
+
+     Pre-gap length  0:02.00
+
+     Peak level 98.0 %
+     Extraction speed 4.2 X
+     Re-read sectors 0
+     Copy CRC 1A2B3C42
+     Accurately ripped (confidence 12, v1+v2)  [v1 284FC707, v2 DC77F9AD]
+     Copy OK
+
+
+Track  3
+
+     Filename 03 - The Long Cut.flac
+
+     Pre-gap length  0:00.00
+
+     Peak level 98.0 %
+     Extraction speed 4.2 X
+     Re-read sectors 0
+     Copy CRC 1A2B3C43
+     Accurately ripped (confidence 12, v1+v2)  [v1 284FC708, v2 DC77F9AE]
+     Copy OK
+
+
+AccurateRip summary
+
+Track  1  accurately ripped (confidence 12, v1+v2)
+Track  2  accurately ripped (confidence 12, v1+v2)
+Track  3  accurately ripped (confidence 12, v1+v2)
+
+All tracks accurately ripped
+
+No errors occurred
+
+End of status report
+
+==== Log checksum 98042F7E87572964CD5096BE4E7FCD418D8C042DACD756F870035A1D9775D64B ====

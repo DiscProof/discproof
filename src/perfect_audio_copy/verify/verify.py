@@ -68,6 +68,84 @@ def _u32(pcm: bytes) -> U32Array:
     return np.frombuffer(pcm, dtype="<u4")
 
 
+class IncrementalVerifier:
+    """Verify tracks as they are ripped (in disc order), so a whole disc of audio is
+    never held: at most the previous track waits for the next one's first samples,
+    which the pressing-offset search needs."""
+
+    def __init__(
+        self,
+        toc: Toc,
+        responses: list[ArResponse] | None,
+        *,
+        search_pressings: bool = True,
+        max_offset: int = MAX_OFFSET,
+    ) -> None:
+        self.toc = toc
+        self.disc = ar_disc_id(toc)
+        self.responses = responses
+        audio = toc.audio_tracks
+        self.first, self.last = audio[0].number, audio[-1].number
+        self.search = search_pressings and bool(responses)
+        self.max_offset = max_offset
+        self.verdicts: dict[int, TrackVerdict] = {}
+        self._held: tuple[int, U32Array, U32Array] | None = None  # number, samples, before
+        self._matches: dict[int, dict[int, int]] = {}  # offset -> {track: confidence}
+
+    def _silence(self) -> U32Array:
+        return np.zeros(self.max_offset, np.uint32)
+
+    def add(self, number: int, pcm: bytes) -> TrackVerdict | None:
+        """Verify one track; None for the hidden track (not in AccurateRip)."""
+        if number == 0:
+            return None
+        sums = ar_checksums(pcm, first=number == self.first, last=number == self.last)
+        verdict = match_tracks({number: sums}, self.responses or [], self.first)[number]
+        self.verdicts[number] = verdict
+        if self.search:
+            samples = _u32(pcm)
+            before = self._silence()
+            if self._held is not None:
+                held_n, held_samples, held_before = self._held
+                contiguous = held_n + 1 == number
+                after = window(samples, 0, self.max_offset) if contiguous else self._silence()
+                self._sweep(held_n, held_samples, held_before, after)
+                if contiguous:
+                    n = len(held_samples)
+                    before = window(held_samples, n - self.max_offset, n)
+            self._held = (number, samples, before)
+        return verdict
+
+    def _sweep(self, number: int, samples: U32Array, before: U32Array, after: U32Array) -> None:
+        assert self.responses is not None
+        found = find_offsets(
+            [TrackAudio(number, samples, before, after)],
+            self.responses,
+            first_track=self.first,
+            last_track=self.last,
+            max_offset=self.max_offset,
+        )
+        for m in found:
+            self._matches.setdefault(m.offset, {})[number] = m.confidence
+
+    def finish(self) -> ArReport:
+        if self._held is not None:
+            n, samples, before = self._held
+            self._sweep(n, samples, before, self._silence())
+            self._held = None
+        if self.responses is None:
+            return ArReport(self.disc, False, dict(self.verdicts))
+        # Report other pressings only for tracks that did not verify at offset 0.
+        failed = {n for n, v in self.verdicts.items() if not v.accurate}
+        pressings = []
+        for offset, tracks in self._matches.items():
+            hit = {n: c for n, c in tracks.items() if n in failed}
+            if offset != 0 and hit:
+                pressings.append(OffsetMatch(offset, tuple(sorted(hit)), sum(hit.values())))
+        pressings.sort(key=lambda m: (len(m.tracks), m.confidence), reverse=True)
+        return ArReport(self.disc, True, dict(self.verdicts), tuple(pressings))
+
+
 def verify_rip(
     toc: Toc,
     tracks: dict[int, bytes],
@@ -78,30 +156,12 @@ def verify_rip(
 ) -> ArReport:
     """Verify ripped tracks (offset-corrected PCM keyed by track number; track 0 /
     HTOA is ignored) against the database responses (None: disc not in database)."""
-    disc = ar_disc_id(toc)
-    audio = toc.audio_tracks
-    first, last = audio[0].number, audio[-1].number
-    pcm = {n: p for n, p in tracks.items() if n != 0}
-    sums = {n: ar_checksums(p, first=n == first, last=n == last) for n, p in pcm.items()}
-    if responses is None:
-        return ArReport(disc, False, match_tracks(sums, [], first))
-    verdicts = match_tracks(sums, responses, first)
-    pressings: tuple[OffsetMatch, ...] = ()
-    if search_pressings and not all(v.accurate for v in verdicts.values()):
-        audios = []
-        for n, p in pcm.items():
-            prev, nxt = pcm.get(n - 1), pcm.get(n + 1)
-            silence = np.zeros(max_offset, np.uint32)
-            before = (
-                window(_u32(prev), len(prev) // 4 - max_offset, len(prev) // 4) if prev else silence
-            )
-            after = window(_u32(nxt), 0, max_offset) if nxt else silence
-            audios.append(TrackAudio(n, _u32(p), before, after))
-        matches = find_offsets(
-            audios, responses, first_track=first, last_track=last, max_offset=max_offset
-        )
-        pressings = tuple(m for m in matches if m.offset != 0)
-    return ArReport(disc, True, verdicts, pressings)
+    v = IncrementalVerifier(
+        toc, responses, search_pressings=search_pressings, max_offset=max_offset
+    )
+    for n in sorted(tracks):
+        v.add(n, tracks[n])
+    return v.finish()
 
 
 def offset_test_tracks(toc: Toc, count: int = 3) -> list[int]:

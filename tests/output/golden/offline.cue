@@ -1,0 +1,12 @@
+REM GENRE "Alt-Country"
+REM DATE 1993
+REM DISCID 910D690C
+REM COMMENT "Perfect Audio Copy 0.1.0"
+CATALOG 0075994542423
+PERFORMER "Uncle Tupelo"
+TITLE "Anodyne 'Deluxe'"
+FILE "01 - Slate.flac" WAVE
+  TRACK 01 AUDIO
+    TITLE "Slate"
+    PERFORMER "Uncle Tupelo"
+    INDEX 01 00:00:00
