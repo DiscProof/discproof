@@ -142,7 +142,7 @@ class AlbumWriter:
         ar_in_database: bool | None = None,
         ar_error: str | None = None,
         pregaps: dict[int, int] | None = None,
-        gap_silence: dict[int, bool | None] | None = None,
+        gap_peaks: dict[int, int | None] | None = None,
         notes: list[str] | None = None,
         now: Callable[[], dt.datetime] = dt.datetime.now,
         on_encoded: Callable[[int, Path | None, str | None], None] | None = None,
@@ -157,7 +157,7 @@ class AlbumWriter:
         self.ar_in_database = ar_in_database
         self.ar_error = ar_error
         self.pregaps = pregaps or {}
-        self.gap_silence = gap_silence or {}
+        self.gap_peaks = gap_peaks or {}
         self.notes = list(notes or [])
         self._now = now
         self._on_encoded = on_encoded
@@ -283,7 +283,7 @@ class AlbumWriter:
                     start=res.start if res else (toc_track.start if toc_track else 0),
                     sectors=res.sectors if res else 0,
                     pregap=self.pregaps.get(n),
-                    pregap_silent=self.gap_silence.get(n),
+                    pregap_peak=self.gap_peaks.get(n),
                     isrc=meta.isrcs[0] if meta.isrcs else None,
                     preemphasis=bool(toc_track and toc_track.preemphasis),
                     copy_permitted=bool(toc_track and toc_track.copy_permitted),

@@ -977,7 +977,7 @@ class Backend(QObject):
                 self._post(lambda: self._rip_failed(gen, msg))
                 return
             try:
-                pregaps, silence, notes = self._detect_gaps(drive, disc, settings, gen, cancel)
+                pregaps, peaks, notes = self._detect_gaps(drive, disc, settings, gen, cancel)
                 if cancel.is_set():
                     self._post(lambda: self._rip_failed(gen, "Rip cancelled"))
                     return
@@ -993,7 +993,7 @@ class Backend(QObject):
                     ar_in_database=ar_in_db,
                     ar_error=ar_error,
                     pregaps=pregaps,
-                    gap_silence=silence,
+                    gap_peaks=peaks,
                     notes=notes,
                 )
                 if writer.prepare() is None:
@@ -1041,7 +1041,7 @@ class Backend(QObject):
         settings: ExtractionSettings,
         gen: int,
         cancel: threading.Event,
-    ) -> tuple[dict[int, int], dict[int, bool | None], list[str]]:
+    ) -> tuple[dict[int, int], dict[int, int | None], list[str]]:
         """Pre-gaps of the ripped tracks and of the tracks after them (their INDEX 00
         lies in the ripped file), plus track 1's hidden-track check."""
         if not self._settings.detect_gaps:
@@ -1059,7 +1059,7 @@ class Backend(QObject):
             results[n] = detector.detect(n)
             self._post(functools.partial(self._gaps_progress, gen, i + 1, len(wanted)))
         pregaps = {n: r.pregap for n, r in results.items()}
-        silence = {n: r.silent for n, r in results.items()}
+        peaks = {n: r.peak for n, r in results.items()}
         notes: list[str] = []
         first = toc.track(audio[0])
         htoa = results.get(first.number)
@@ -1067,7 +1067,7 @@ class Backend(QObject):
             first.number == 1
             and first.start > 0
             and htoa is not None
-            and htoa.silent is False
+            and htoa.quiet is False
             and not settings.rip_htoa
         ):
             notes.append(
@@ -1079,7 +1079,7 @@ class Backend(QObject):
             if r.pregap and not r.confirmed and n != first.number:
                 notes.append(f"The pre-gap of track {n} could not be confirmed (±2 sectors)")
         self._post(lambda: self._gaps_done(gen, results))
-        return pregaps, silence, notes
+        return pregaps, peaks, notes
 
     def _gaps_progress(self, gen: int, done: int, total: int) -> None:
         if gen != self._generation:

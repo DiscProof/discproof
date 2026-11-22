@@ -30,6 +30,9 @@ from perfect_audio_copy.engine.pcm import peak
 from perfect_audio_copy.engine.source import AudioSource
 
 TOLERANCE = 2
+#: Below this peak (1% of full scale, -40 dBFS) a gap is "near-silent": tape hiss,
+#: room tone or dither rather than music.
+QUIET_PEAK = 328
 FIRST_PROBE = 150  # 2 seconds
 READ_ATTEMPTS = 3
 SILENCE_BATCH = 26
@@ -40,7 +43,18 @@ class GapResult:
     track: int
     pregap: int  # sectors of INDEX 00 before INDEX 01 (0 = no pre-gap)
     confirmed: bool  # a second reading agreed (within TOLERANCE)
-    silent: bool | None = None  # gap audio is digital silence (None: not checked)
+    #: Peak sample level of the gap's audio, 0..32768 (None: not measured / no gap).
+    peak: int | None = None
+
+    @property
+    def silent(self) -> bool | None:
+        """Digital silence (None: not measured)."""
+        return None if self.peak is None else self.peak == 0
+
+    @property
+    def quiet(self) -> bool | None:
+        """Silent or near-silent (noise floor only, no music)."""
+        return None if self.peak is None else self.peak < QUIET_PEAK
 
 
 class GapDetector:
@@ -100,7 +114,7 @@ class GapDetector:
         start = track.start
         if number == self.toc.first:
             # Track 1's pre-gap is everything before its INDEX 01 (HTOA if > 0).
-            return GapResult(number, start, True, self._silence(0, start))
+            return GapResult(number, start, True, self._peak(0, start))
         prev = self.toc.track(number - 1)
         if not (track.is_audio and prev.is_audio) or track.session != prev.session:
             return GapResult(number, 0, False)
@@ -110,8 +124,8 @@ class GapDetector:
         if first is None:
             return GapResult(number, 0, False)
         pregap, confirmed = first
-        silent = self._silence(start - pregap, start) if pregap else None
-        return GapResult(number, pregap, confirmed, silent)
+        level = self._peak(start - pregap, start) if pregap else None
+        return GapResult(number, pregap, confirmed, level)
 
     def _search(self, number: int, start: int, lo_bound: int) -> tuple[int, bool] | None:
         """(pre-gap length, confirmed), or None if Q could not be read at all."""
@@ -176,22 +190,23 @@ class GapDetector:
 
     # ------------------------------------------------------------ silence
 
-    def _silence(self, a: int, b: int) -> bool | None:
-        """Digital silence in [a, b), ignoring the edge sectors (read offset)."""
-        if not self.check_silence or b - a <= 2:
-            return None if b <= a else True
+    def _peak(self, a: int, b: int) -> int | None:
+        """Peak level of the audio in [a, b), ignoring the edge sectors (whose samples
+        can belong to the neighbouring track through the read offset)."""
+        if not self.check_silence or b <= a:
+            return None
+        if b - a <= 2:
+            return 0
         level = 0
         lba = a + 1
         try:
             while lba < b - 1:
                 n = min(SILENCE_BATCH, b - 1 - lba)
                 level = max(level, peak(self.source.read_cd(lba, n).audio))
-                if level:
-                    return False
                 lba += n
         except DriveError:
             return None
-        return True
+        return level
 
     def detect_all(self, numbers: list[int] | None = None) -> dict[int, GapResult]:
         audio = [t.number for t in self.toc.audio_tracks]

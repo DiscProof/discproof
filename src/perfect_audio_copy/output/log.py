@@ -12,6 +12,7 @@ import re
 
 from perfect_audio_copy import APP_NAME
 from perfect_audio_copy.drive.msf import frames_to_timestamp
+from perfect_audio_copy.engine.gaps import QUIET_PEAK
 from perfect_audio_copy.engine.profile import CacheDefeat, Mode
 from perfect_audio_copy.metadata.model import Source
 from perfect_audio_copy.output.report import AlbumReport, TrackReport
@@ -31,6 +32,16 @@ _MONTHS = [
     "December",
 ]
 _CHECKSUM = re.compile(r"\n==== Log checksum ([0-9A-F]{64}) ====\n?$")
+
+
+def gap_level(peak: int) -> str:
+    """Describe a gap's audio: silent, near-silent (noise floor), or audio."""
+    pct = peak * 100.0 / 32768.0
+    if peak == 0:
+        return "silent"
+    if peak < QUIET_PEAK:
+        return f"near-silent, peak {pct:.1f} %"
+    return f"contains audio, peak {pct:.1f} %"
 
 
 def _yn(v: bool) -> str:
@@ -143,8 +154,8 @@ def _track(t: TrackReport, report: AlbumReport) -> list[str]:
     lines = [label, "", f"     Filename {t.filename}", ""]
     if t.number > 0:
         gap = "unknown (not detected)" if t.pregap is None else frames_to_timestamp(t.pregap)
-        if t.pregap and t.pregap_silent is not None:
-            gap += " (silent)" if t.pregap_silent else " (contains audio)"
+        if t.pregap and t.pregap_peak is not None:
+            gap += f" ({gap_level(t.pregap_peak)})"
         lines += [f"     Pre-gap length  {gap}", ""]
     rip = t.rip
     if rip is None:

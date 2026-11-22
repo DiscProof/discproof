@@ -77,3 +77,26 @@ def test_secure_rip_is_repeatable(drive: Drive) -> None:
     second = Extractor(drive, DriveProfile(), settings, toc=toc).run()
     assert first.tracks[0].crc32 == second.tracks[0].crc32
     assert first.ok, f"suspicious positions: {first.tracks[0].suspicious}"
+
+
+def test_gap_detection_matches_brute_force(drive: Drive) -> None:
+    """Every pre-gap is confirmed, and at three tracks the boundary found by the
+    search equals the one found by reading Q at every sector around it."""
+    from perfect_audio_copy.engine.gaps import GapDetector
+
+    toc = drive.read_toc()
+    found = GapDetector(drive, toc).detect_all()
+    assert all(r.confirmed for r in found.values()), found
+    checked = 0
+    for n, r in found.items():
+        if n == toc.first or not r.pregap or checked == 3:
+            continue
+        start = toc.track(n).start
+        a = start - r.pregap - 6
+        sub = drive.read_cd(a, 12, subq=True).subq or ()
+        tracks = [
+            q.track if isinstance(q, QPosition) and q.crc_ok else None for q in map(parse_q, sub)
+        ]
+        first = next(a + i for i, t in enumerate(tracks) if t == n)
+        assert start - first == r.pregap, (n, start - first, r.pregap)
+        checked += 1

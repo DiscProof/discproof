@@ -24,7 +24,7 @@ class TrackReport:
     #: Sectors of this track's INDEX 00 (pre-gap), stored at the end of the previous
     #: file. None: not detected (gap detection is optional).
     pregap: int | None = None
-    pregap_silent: bool | None = None  # None: not checked
+    pregap_peak: int | None = None  # peak level of the gap audio, 0..32768 (None: unknown)
     isrc: str | None = None
     preemphasis: bool = False
     copy_permitted: bool = False

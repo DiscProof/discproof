@@ -317,3 +317,42 @@ def test_cancel_during_gap_detection(qapp: object, tmp_path: Path) -> None:
     wait_until(lambda: b.property("state") == "ready")
     assert b.property("message") == "Rip cancelled"
     assert not b.property("results")["visible"]
+
+
+@pytest.mark.parametrize(("level", "warned"), [(0, False), (20, False), (9000, True)])
+def test_hidden_track_warning_only_for_real_audio(qapp: object, level: int, warned: bool) -> None:
+    import threading
+
+    from perfect_audio_copy.drive.device import DiscInfo
+    from perfect_audio_copy.engine.gaps import GapResult
+    from perfect_audio_copy.engine.profile import ExtractionSettings
+    from perfect_audio_copy.engine.virtual import make_toc
+    from perfect_audio_copy.ui.backend.controller import Backend
+    from perfect_audio_copy.ui.backend.demo import demo_backend_kwargs
+
+    b = Backend(**demo_backend_kwargs(speed=0))
+    toc = make_toc([300, 300], first_start=40)
+
+    class FakeDetector:
+        def __init__(self, *a, **k):  # type: ignore[no-untyped-def]
+            pass
+
+        def detect(self, n: int) -> GapResult:
+            return GapResult(n, 40 if n == 1 else 0, True, level if n == 1 else None)
+
+    import perfect_audio_copy.ui.backend.controller as ctl
+
+    real = ctl.GapDetector
+    ctl.GapDetector = FakeDetector  # type: ignore[misc,assignment]
+    try:
+        _, peaks, notes = b._detect_gaps(
+            None,
+            DiscInfo(toc),
+            ExtractionSettings(tracks=(1, 2)),
+            b._generation,
+            threading.Event(),
+        )
+    finally:
+        ctl.GapDetector = real  # type: ignore[misc]
+    assert peaks[1] == level
+    assert any("hidden track" in n for n in notes) is warned

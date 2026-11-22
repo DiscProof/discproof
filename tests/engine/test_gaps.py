@@ -72,3 +72,19 @@ def test_progress_callback() -> None:
         drive(audio, toc), toc, check_silence=False, on_progress=lambda d, t: seen.append((d, t))
     ).detect_all([2, 3])
     assert seen == [(1, 2), (2, 2)]
+
+
+def test_noise_floor_gap_is_quiet_not_silent() -> None:
+    """Like Anodyne's gaps: tape hiss at ~0.1 % of full scale is near-silent."""
+    import numpy as np
+
+    audio, toc = noise_disc(LENGTHS)
+    pcm = np.frombuffer(audio, "<i2").copy()
+    s = toc.track(2).start
+    rng = np.random.default_rng(0)
+    pcm[(s - 150) * 1176 : s * 1176] = rng.integers(-23, 24, size=150 * 1176)
+    found = GapDetector(drive(pcm.tobytes(), toc, pregaps={2: 150}), toc).detect(2)
+    assert found.peak is not None and 0 < found.peak < 328
+    assert found.silent is False and found.quiet is True
+    loud = GapDetector(drive(audio, toc, pregaps={2: 150}), toc).detect(2)
+    assert loud.quiet is False

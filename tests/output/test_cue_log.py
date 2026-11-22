@@ -46,3 +46,18 @@ def test_report_ok_flags() -> None:
     assert not troubled_report().ok
     report: AlbumReport = offline_report()
     assert not report.ok  # cancelled
+
+
+def test_gap_level_wording() -> None:
+    from dataclasses import replace
+
+    from perfect_audio_copy.output.log import gap_level
+
+    assert gap_level(0) == "silent"
+    assert gap_level(23) == "near-silent, peak 0.1 %"
+    assert gap_level(11200) == "contains audio, peak 34.2 %"
+    report = clean_report()
+    t2 = replace(report.tracks[1], pregap_peak=23)
+    text = render_log(replace(report, tracks=(report.tracks[0], t2, report.tracks[2])))
+    assert "Pre-gap length  0:02.00 (near-silent, peak 0.1 %)" in text
+    assert verify_log(text)
