@@ -306,6 +306,22 @@ class Extractor:
         st.suspicious.append(stamp)
         self._emit(SuspiciousPosition(st.span.number, lba, stamp))
 
+    def read_range(self, lba: int, count: int) -> tuple[bytes, list[SectorStatus]]:
+        """Raw drive sectors [lba, lba+count) in the configured mode, without offset
+        correction or track splitting (offset detection, feature tests)."""
+        data: list[bytes] = []
+        statuses: list[SectorStatus] = []
+        self._known.clear()
+        pos = lba
+        while pos < lba + count:
+            self._checkpoint()
+            n = min(self.reader.batch, lba + count - pos)
+            d, st = self._block(pos, n)
+            data += d
+            statuses += st
+            pos += n
+        return b"".join(data), statuses
+
     # ------------------------------------------------------------ blocks
 
     def _block(self, lba: int, n: int) -> tuple[list[bytes], list[SectorStatus]]:

@@ -124,18 +124,9 @@ class Reader:
     # ------------------------------------------------------------ raw reads
 
     def _far_lba(self, lba: int, count: int) -> int | None:
-        """A sector outside the cache window of a read at ``lba``. Drives read ahead,
-        so going backwards is preferred; forwards must clear the read-ahead too."""
-        distance = self.profile.cache_sectors + count + self.batch
-        lo, hi = max(self.lo, 0), self.toc.audio_leadout
-        for c in (lba - distance, lba + count + distance):
-            if lo <= c < hi and self.addressable(c):
-                return c
-        # Disc shorter than the cache window: go as far away as possible.
-        for c in (lo, hi - 1) if lba > lo else (hi - 1,):
-            if self.addressable(c):
-                return c
-        return None
+        window = self.profile.cache_sectors + self.batch
+        far = seek_away_lba(lba, count, window, max(self.lo, 0), self.toc.audio_leadout)
+        return far if self.addressable(far) else None
 
     def _raw(self, lba: int, count: int) -> _Raw:
         samples = np.zeros(count * SAMPLES_PER_SECTOR, dtype=np.uint32)
@@ -340,6 +331,16 @@ class Reader:
             None,
             np.array([not self.addressable(lba + i) for i in range(count)], dtype=np.bool_),
         )
+
+
+def seek_away_lba(lba: int, count: int, window: int, lo: int, hi: int) -> int:
+    """A sector whose read evicts [lba, lba+count) from a read-ahead cache of
+    ``window`` sectors. Backwards is preferred (read-ahead runs forwards); if the disc
+    is too short for a full window either way, the farthest end of the disc."""
+    for c in (lba - window, lba + count + window):
+        if lo <= c < hi:
+            return c
+    return hi - 1 if (hi - 1) - (lba + count) >= lba - lo else lo
 
 
 def _constant(raw: _Raw) -> bool:

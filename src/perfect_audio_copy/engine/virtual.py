@@ -149,12 +149,26 @@ class VirtualDrive:
         self._cache: _Segment | None = None
         #: Start misalignment (samples) of each disc read, most recent last.
         self.jitter_log: list[int] = []
+        # Simulated time (seconds) for timing-based feature detection.
+        self.now = 0.0
+        self._head = 0
 
     @classmethod
     def from_wav(cls, path: str | Path, toc: Toc, **kwargs: object) -> VirtualDrive:
         return cls(load_wav(path), toc, **kwargs)  # type: ignore[arg-type]
 
     # ------------------------------------------------------------ AudioSource
+
+    # Timing model: a command costs ``COMMAND_S``; a disc read adds a seek that grows
+    # with distance plus media time at the current speed; a cache hit only costs the
+    # bus transfer.
+    COMMAND_S = 0.0005
+    SEEK_BASE_S = 0.03
+    SEEK_FULL_S = 0.12  # extra for a full-stroke seek
+    BUS_BYTES_PER_S = 30e6
+
+    def clock(self) -> float:
+        return self.now
 
     def read_toc(self) -> Toc:
         return self.toc
@@ -172,6 +186,7 @@ class VirtualDrive:
 
     def read_cd(self, lba: int, count: int, *, c2: bool = False, subq: bool = False) -> SectorRead:
         self.stats.commands += 1
+        self.now += self.COMMAND_S + count * SECTOR_SIZE / self.BUS_BYTES_PER_S
         if count <= 0:
             raise IllegalRequestError(_READ_CD, _INVALID_FIELD)
         if c2 and self.c2_mode is C2Mode.NONE:
@@ -209,11 +224,18 @@ class VirtualDrive:
     def _disc_read(self, lba: int, count: int, hi: int) -> _Segment:
         """Read from the disc: the requested sectors plus read-ahead into the cache."""
         self.stats.disc_reads += 1
+        if lba != self._head:
+            span_frac = abs(lba - self._head) / max(self.toc.leadout, 1)
+            self.now += self.SEEK_BASE_S + self.SEEK_FULL_S * min(1.0, span_frac)
+        speed = self.speed or self.max_speed
         shift = 0
         if self.max_jitter and self._rng.random() < self.jitter:
             shift = int(self._rng.integers(1, self.max_jitter + 1)) * int(self._rng.choice((-1, 1)))
         self.jitter_log.append(shift)
         span = max(count, min(self.cache_sectors, hi - lba))
+        # The requested sectors cost media time; read-ahead continues in the background.
+        self.now += count / (75.0 * speed)
+        self._head = lba + count
         first = lba * SAMPLES_PER_SECTOR - self.offset + shift
         n = span * SAMPLES_PER_SECTOR
 

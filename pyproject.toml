@@ -28,6 +28,7 @@ qt-wheel = ["PySide6>=6.6"]
 [project.scripts]
 perfect-audio-copy = "perfect_audio_copy.app:main"
 perfect-audio-copy-probe = "perfect_audio_copy.drive.probe:main"
+perfect-audio-copy-drivecheck = "perfect_audio_copy.verify.drivecheck:main"
 
 [dependency-groups]
 dev = [
