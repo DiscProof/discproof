@@ -25,7 +25,7 @@ from fakes import (
 
 from perfect_audio_copy.drive import cdtext as ct
 from perfect_audio_copy.drive import sense as s
-from perfect_audio_copy.drive.constants import C2_SIZE, SECTOR_SIZE
+from perfect_audio_copy.drive.constants import C2_SIZE, SECTOR_SIZE, SUBQ_SIZE
 from perfect_audio_copy.drive.device import Drive
 from perfect_audio_copy.drive.subchannel import QPosition, parse_q
 from perfect_audio_copy.drive.transport import RawResult
@@ -144,6 +144,37 @@ def test_read_cd_splits_c2_and_q() -> None:
     assert isinstance(q, QPosition)
     assert q.absolute_lba == 102
     assert q.crc_ok
+
+
+@pytest.mark.parametrize("q_first", [False, True])
+def test_read_cd_detects_c2_q_order(q_first: bool) -> None:
+    drive, _ = make_drive({0xBE: read_cd_handler(c2_errors={101: 5}, q_first=q_first)})
+    assert drive.q_before_c2 is None
+    r = drive.read_cd(100, 3, c2=True, subq=True)
+    assert drive.q_before_c2 is q_first
+    assert r.c2_error_bits == 5
+    assert r.c2_for(0) == bytes(C2_SIZE)
+    assert r.subq is not None
+    for i, q in enumerate(r.subq):
+        pos = parse_q(q)
+        assert isinstance(pos, QPosition)
+        assert pos.absolute_lba == 100 + i
+        assert pos.crc_ok
+    # The decision sticks for later reads.
+    r2 = drive.read_cd(200, 2, c2=True, subq=True)
+    assert r2.c2_error_bits == 0
+    assert r2.subq is not None
+    pos = parse_q(r2.subq[1])
+    assert isinstance(pos, QPosition) and pos.absolute_lba == 201
+
+
+def test_c2_q_order_stays_undecided_without_valid_q() -> None:
+
+    stride = SECTOR_SIZE + C2_SIZE + SUBQ_SIZE
+    drive, _ = make_drive({0xBE: lambda cdb, _n: bytes(stride * int.from_bytes(cdb[6:9], "big"))})
+    r = drive.read_cd(100, 2, c2=True, subq=True)
+    assert drive.q_before_c2 is None
+    assert r.c2_error_bits == 0
 
 
 def test_short_read_is_transport_error() -> None:

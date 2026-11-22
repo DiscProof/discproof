@@ -19,6 +19,7 @@ from perfect_audio_copy.drive.sense import (
     ScsiError,
     TransportError,
 )
+from perfect_audio_copy.drive.subchannel import QPosition, parse_q
 from perfect_audio_copy.drive.toc import Toc, TocError, parse_basic_toc, parse_full_toc
 from perfect_audio_copy.drive.transport import BaseTransport, SgioTransport
 
@@ -50,6 +51,29 @@ class SectorRead:
         return int.from_bytes(self.c2, "big").bit_count()
 
 
+def _q_matches(q: bytes, lba: int) -> bool:
+    pos = parse_q(q)
+    return isinstance(pos, QPosition) and pos.crc_ok is not False and pos.absolute_lba == lba
+
+
+def _detect_q_before_c2(data: bytes, lba: int, count: int, stride: int) -> bool | None:
+    """Decide from one combined C2+Q read whether the drive sent Q before C2.
+
+    Each candidate layout scores the sectors whose Q record decodes to the expected
+    absolute position. Returns None (undecided) when neither layout matches any sector.
+    """
+    mmc_order = q_first = 0
+    for i in range(count):
+        after_audio = i * stride + SECTOR_SIZE
+        if _q_matches(data[after_audio + C2_SIZE : after_audio + C2_SIZE + SUBQ_SIZE], lba + i):
+            mmc_order += 1
+        if _q_matches(data[after_audio : after_audio + SUBQ_SIZE], lba + i):
+            q_first += 1
+    if mmc_order == q_first:
+        return None
+    return q_first > mmc_order
+
+
 @dataclass(slots=True)
 class DiscInfo:
     toc: Toc
@@ -78,6 +102,10 @@ class Drive:
         self._clock = clock
         self._sleep = sleep
         self._inquiry: mmc.Inquiry | None = None
+        # Where the drive puts Q relative to C2 when both are requested. MMC says
+        # audio | C2 | Q, but some drives (e.g. HL-DT-ST GP75N) send audio | Q | C2.
+        # None until a combined read has told us; see _detect_q_before_c2.
+        self.q_before_c2: bool | None = None
 
     @classmethod
     def open(cls, path: str, *, max_batch: int = DEFAULT_BATCH) -> Drive:
@@ -245,7 +273,8 @@ class Drive:
         subq: bool = False,
         timeout_s: float = 30.0,
     ) -> SectorRead:
-        """One READ CD command. Sector layout: audio, then C2 pointers, then Q."""
+        """One READ CD command. Sector layout: audio, then C2 pointers and Q in the
+        order the drive uses (see :attr:`q_before_c2`)."""
         stride = self.stride(c2=c2, subq=subq)
         cdb = mmc.cdb_read_cd(
             lba,
@@ -260,6 +289,11 @@ class Drive:
             )
         if stride == SECTOR_SIZE:
             return SectorRead(lba, count, data)
+        q_first = False
+        if c2 and subq:
+            if self.q_before_c2 is None:
+                self.q_before_c2 = _detect_q_before_c2(data, lba, count, stride)
+            q_first = bool(self.q_before_c2)
         audio = bytearray()
         c2_buf = bytearray() if c2 else None
         qs: list[bytes] | None = [] if subq else None
@@ -267,10 +301,13 @@ class Drive:
             base = i * stride
             audio += data[base : base + SECTOR_SIZE]
             pos = base + SECTOR_SIZE
+            if qs is not None and q_first:
+                qs.append(bytes(data[pos : pos + SUBQ_SIZE]))
+                pos += SUBQ_SIZE
             if c2_buf is not None:
                 c2_buf += data[pos : pos + C2_SIZE]
                 pos += C2_SIZE
-            if qs is not None:
+            if qs is not None and not q_first:
                 qs.append(bytes(data[pos : pos + SUBQ_SIZE]))
         return SectorRead(
             lba,

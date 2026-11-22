@@ -204,8 +204,10 @@ def sector_audio(lba: int) -> bytes:
     return struct.pack(">i", lba) * (SECTOR_SIZE // 4)
 
 
-def read_cd_handler(*, c2_errors: dict[int, int] | None = None) -> Handler:
-    """Serves READ CD from a synthetic disc; honours error-field and Q selection."""
+def read_cd_handler(*, c2_errors: dict[int, int] | None = None, q_first: bool = False) -> Handler:
+    """Serves READ CD from a synthetic disc; honours error-field and Q selection.
+
+    ``q_first`` mimics drives that send Q before the C2 field instead of after it."""
     c2_errors = c2_errors or {}
 
     def handler(cdb: bytes, _n: int) -> bytes:
@@ -216,13 +218,16 @@ def read_cd_handler(*, c2_errors: dict[int, int] | None = None) -> Handler:
         out = bytearray()
         for i in range(count):
             out += sector_audio(lba + i)
+            q = q_record(1, 1, lba + i, lba + i)[:SUBQ_SIZE]
+            if want_q and q_first:
+                out += q
             if want_c2:
                 c2 = bytearray(C2_SIZE)
                 for bit in range(c2_errors.get(lba + i, 0)):
                     c2[bit // 8] |= 0x80 >> (bit % 8)
                 out += c2
-            if want_q:
-                out += q_record(1, 1, lba + i, lba + i)[:SUBQ_SIZE]
+            if want_q and not q_first:
+                out += q
         return bytes(out)
 
     return handler
