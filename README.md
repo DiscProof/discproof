@@ -11,7 +11,7 @@ The app runs on the **system Qt** so that it gets the Breeze look and Kirigami.
 That is why the virtualenv must see system site-packages.
 
 ```bash
-sudo dnf install python3-pyside6 kf6-kirigami kf6-qqc2-desktop-style flac uv
+sudo dnf install python3-pyside6 python3-pillow kf6-kirigami kf6-qqc2-desktop-style flac uv
 uv venv --system-site-packages .venv
 uv pip install -e . --group dev        # or: .venv/bin/pip install -e . --group dev
 ```

@@ -12,6 +12,8 @@ The extraction engine is tested against `VirtualDrive` (`engine/virtual.py`), wh
 
 Verification is tested against published whipper vectors (AccurateRip and CDDB disc IDs for Ladyhawke and Bloc Party), a literal port of the reference AccurateRip checksum loop, and simulated drives for offset detection and the feature wizard. The AccurateRip and drive-list clients run against recorded responses (`httpx.MockTransport`), never the live network.
 
+Metadata is tested against responses recorded once from the live services for the MusicBrainz documentation example disc (`49HHV7Eb8UKF3aQiNmu1GR8vKTY-`): the MusicBrainz disc ID and TOC lookups, its Cover Art Archive listing, and the same release on Discogs. The disc ID algorithm is checked against that documented example.
+
 ## Hardware checklist
 
 Plug in the drive, insert a commercially pressed audio CD, then work through the list.
@@ -43,6 +45,25 @@ Run `.venv/bin/python -m perfect_audio_copy.verify.drivecheck` (or `perfect-audi
 - the drive-list offset is found (GP75N: +6) and appears among the offsets the disc supports;
 - a disc with several pressings in the database is reported as ambiguous instead of setting a wrong offset. The offset is only confirmed when two different discs share exactly one candidate;
 - C2 is only trusted after a run with a scratched disc that shows errors and no missed flags.
+
+### Phase 4 — metadata
+
+There is no separate tool yet (the UI arrives in Phase 6). With a disc inserted, run:
+
+```bash
+.venv/bin/python -c "
+from perfect_audio_copy.drive.device import Drive
+from perfect_audio_copy.metadata.service import MetadataService
+with Drive.open('/dev/sr0') as d: info = d.read_disc_info()
+svc = MetadataService(); res = svc.lookup(info)
+print(res.disc_id, res.errors, res.preselected)
+for r in res.releases: print(r.source.value, r.artist, '-', r.title, '|', r.summary())
+print(svc.cover(res.releases[res.preselected or 0]))"
+```
+
+Check that a common pressed CD is found by disc ID (`exact=True`) and preselected, that the track titles match the case, and that a cover of at least 1000 px is found. Compare the disc ID with what MusicBrainz shows for that release. A disc that MusicBrainz doesn't know should fall back to a TOC match, then Discogs (by its MCN), then CD-Text.
+
+The User-Agent carries a placeholder contact URL (`PROJECT_URL` in `src/perfect_audio_copy/__init__.py`) until the project has a public home. Replace it before release.
 
 ### Later phases
 
