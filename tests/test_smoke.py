@@ -68,21 +68,28 @@ def test_ui_launches_offscreen() -> None:
 
 
 @pytest.mark.ui
-def test_ui_prefers_plasma_style_when_installed() -> None:
-    pytest.importorskip("PySide6")
-    from PySide6.QtCore import QLibraryInfo
-
-    qml_root = QLibraryInfo.path(QLibraryInfo.LibraryPath.QmlImportsPath)
-    has_desktop_style = os.path.isfile(os.path.join(qml_root, "org/kde/desktop/qmldir"))
-    proc = _run_smoke()
-    assert proc.returncode == 0, proc.stderr
-    expected = "org.kde.desktop" if has_desktop_style else "Fusion"
-    assert f"style={expected}" in proc.stdout
-
-
-@pytest.mark.ui
-def test_ui_honours_style_env_override() -> None:
+def test_ui_uses_its_own_themed_style() -> None:
+    """The dark theme is drawn from the app's design tokens on top of the Basic style,
+    regardless of the desktop's Qt Quick style."""
     pytest.importorskip("PySide6")
     proc = _run_smoke("Fusion")
     assert proc.returncode == 0, proc.stderr
-    assert "style=Fusion" in proc.stdout
+    assert "style=Basic" in proc.stdout
+
+
+@pytest.mark.ui
+def test_demo_window_renders_without_qml_warnings(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    """Load the full window against the demo disc, let the lookup finish, take a
+    screenshot; any QML warning (broken binding, missing type) fails the test."""
+    pytest.importorskip("PySide6")
+    shot = tmp_path / "demo.png"
+    env = {**os.environ, "QT_QPA_PLATFORM": "offscreen"}
+    proc = subprocess.run(
+        [sys.executable, "-m", "perfect_audio_copy", "--demo", "--screenshot", str(shot),
+         "--screenshot-after", "2500"],
+        capture_output=True, text=True, env=env, timeout=90, check=False,
+    )  # fmt: skip
+    assert proc.returncode == 0, proc.stderr
+    qml_warnings = [ln for ln in proc.stderr.splitlines() if ".qml:" in ln]
+    assert not qml_warnings, "\n".join(qml_warnings)
+    assert shot.stat().st_size > 10_000

@@ -78,6 +78,18 @@ Rip one short track end to end (drive, metadata, AccurateRip, FLAC, tags, cover,
 
 On 2026-11-22 this was done with the HL-DT-ST GP75N (offset +6, cache defeated by reading elsewhere) on Uncle Tupelo's *Anodyne*, track 2: accurately ripped, confidence 112 (v1 and v2), at 1.2x.
 
+### Phase 6 — user interface
+
+`perfect-audio-copy --demo` runs the real UI and pipeline against a simulated drive and disc, offline. The demo disc has weak sectors on track 3 and a bad sector on track 5. With a real drive, check that:
+
+- inserting a disc reads it and looks it up automatically (udev); ejecting clears it, except after a rip, when the results stay until the next disc;
+- a new, untested drive shows the amber "not set up" banner, and the drive wizard reports the GP75N as caching audio (FUA ignored, cleared by reading elsewhere), with accurate stream and the list offset +6;
+- album and track fields can be edited, and the cover can be replaced by drag-and-drop or Ctrl+V;
+- during a rip, the progress, speed, ETA and sector maps update, and pause, resume and cancel work;
+- the results card shows the AccurateRip outcome; "Open folder" and "View log" work; a Plasma notification appears.
+
+UI logic is tested headlessly through the demo (`tests/ui`), and the smoke tests load the full window and fail on any QML warning.
+
 ### Later phases
 
 - Rip a common pressed CD and confirm an AccurateRip match.

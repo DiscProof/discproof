@@ -64,6 +64,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["PLC0415", "PLR0917"]  # late imports after pytest.importorskip
 "src/perfect_audio_copy/app.py" = ["PLC0415"]  # Qt imported lazily so --version works headless
+# Qt/QML naming: signals, slots and properties are camelCase; "×" is the speed sign.
+"src/perfect_audio_copy/ui/backend/**" = ["N802", "N815", "RUF001", "PLR0915"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -76,6 +78,13 @@ warn_unreachable = true
 # mutagen ships partial annotations; its untyped calls stay inside this module.
 module = ["perfect_audio_copy.output.tags"]
 disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+# Fedora's PySide6 has no stubs, so Qt base classes and @Slot/@Property look untyped.
+# Core packages stay fully strict; only these two checks are relaxed for the UI.
+module = ["perfect_audio_copy.ui.*"]
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
 
 [[tool.mypy.overrides]]
 # Fedora's python3-pyside6 ships without py.typed/stubs (the PyPI wheel has them).
