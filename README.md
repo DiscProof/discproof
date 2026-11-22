@@ -11,10 +11,11 @@ It is inspired by Exact Audio Copy: it re-reads and compares sectors, corrects t
 
 ```bash
 sudo dnf install rpm-build pyproject-rpm-macros python3-devel
-sudo dnf builddep packaging/perfect-audio-copy.spec
 scripts/build-rpm.sh
 sudo dnf install dist/rpm/RPMS/noarch/perfect-audio-copy-*.noarch.rpm
 ```
+
+The first build usually stops with "Missing build dependencies" (the Python build tools are worked out from `pyproject.toml` during the build). Run the `sudo dnf builddep …` command it prints, then `scripts/build-rpm.sh` again.
 
 This installs the app system-wide, with its menu entry, icon and the Plasma "audio CD inserted" action. Runtime dependencies are pulled in automatically: Fedora's PySide6, NumPy, Pillow, mutagen, httpx, pyudev, `flac`.
 

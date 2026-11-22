@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Build source and binary RPMs from the current git commit.
 #   sudo dnf install rpm-build pyproject-rpm-macros python3-devel
-#   sudo dnf builddep packaging/perfect-audio-copy.spec
 #   scripts/build-rpm.sh            -> RPMs under ./dist/rpm/
+# The Python build dependencies (hatchling, pip, ...) are generated from
+# pyproject.toml during the build; if they are missing the script says which
+# `dnf builddep` command installs them, then run it again.
 # (Or build in a clean chroot: mock -r fedora-44-x86_64 dist/rpm/SRPMS/*.src.rpm)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -20,5 +22,20 @@ git archive --format=tar.gz --prefix="perfect-audio-copy-$rpmver/" \
 sed "s/^Version:.*/Version:        $rpmver/" packaging/perfect-audio-copy.spec \
     > "$top/SPECS/perfect-audio-copy.spec"
 
+rm -f "$top"/SRPMS/*.buildreqs.nosrc.rpm
+set +e
 rpmbuild --define "_topdir $top" -ba "$top/SPECS/perfect-audio-copy.spec"
-echo "RPMs: $top/RPMS/noarch/ and $top/SRPMS/"
+status=$?
+set -e
+if [ "$status" -eq 11 ]; then
+    # rpmbuild stopped at %generate_buildrequires: dependencies are missing.
+    nosrc=$(ls "$top"/SRPMS/*.buildreqs.nosrc.rpm)
+    echo >&2
+    echo "Missing build dependencies. Install them, then run this script again:" >&2
+    echo "    sudo dnf builddep $nosrc" >&2
+    exit 11
+fi
+[ "$status" -eq 0 ] || exit "$status"
+echo
+echo "RPMs:"
+ls -1 "$top"/RPMS/noarch/*.rpm "$top"/SRPMS/*.src.rpm
