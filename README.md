@@ -15,7 +15,7 @@ scripts/build-rpm.sh
 sudo dnf install dist/rpm/RPMS/noarch/perfect-audio-copy-*.noarch.rpm
 ```
 
-The first build usually stops with "Missing build dependencies" (the Python build tools are worked out from `pyproject.toml` during the build). Run the `sudo dnf builddep …` command it prints, then `scripts/build-rpm.sh` again.
+The first builds usually stop with "Missing build dependencies": the dependencies are worked out from `pyproject.toml` during the build, first the build tools, then (because the build runs the tests) the app's own dependencies. Each time, run the `sudo dnf builddep …` command it prints, then `scripts/build-rpm.sh` again; expect this twice on a fresh system.
 
 This installs the app system-wide, with its menu entry, icon and the Plasma "audio CD inserted" action. Runtime dependencies are pulled in automatically: Fedora's PySide6, NumPy, Pillow, mutagen, httpx, pyudev, `flac`.
 
