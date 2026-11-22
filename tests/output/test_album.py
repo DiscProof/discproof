@@ -195,3 +195,54 @@ def test_cancelled_rip_writes_log_but_no_cue(tmp_path: Path) -> None:
     out = writer.finish(ext.run())
     assert out.cue is None and sorted(out.tracks) == [1]
     assert "Extraction was cancelled" in out.log.read_text()
+
+
+def two_disc_release(toc, disc: int):  # type: ignore[no-untyped-def]
+    from dataclasses import replace
+
+    return replace(release(toc), title="Broadcasts Vol. 3", disc_number=disc, disc_total=2)
+
+
+def rip_disc(tmp_path: Path, disc: int, *, subfolders: bool = True):  # type: ignore[no-untyped-def]
+    audio, toc = noise_disc(LENGTHS, seed=disc)
+    settings = OutputSettings(tmp_path / "Music", workers=2, disc_subfolders=subfolders)
+    writer = AlbumWriter(
+        settings,
+        two_disc_release(toc, disc),
+        DiscInfo(toc),
+        drive="V",
+        profile=DriveProfile(caches_audio=False),
+        extraction=ExtractionSettings(),
+        cover=cover(),
+    )
+    assert writer.prepare() is not None
+    result = Extractor(
+        drive(audio, toc), DriveProfile(caches_audio=False), on_track=writer.on_track
+    ).run()
+    return writer.finish(result)
+
+
+def test_multi_disc_set_uses_a_folder_per_disc(tmp_path: Path) -> None:
+    album = tmp_path / "Music" / "Test Artist" / "Broadcasts Vol. 3 (2001)"
+    one = rip_disc(tmp_path, 1)
+    two_disc_settings = OutputSettings(tmp_path / "Music")
+    from perfect_audio_copy.engine.virtual import make_toc
+
+    assert folder_conflict(two_disc_settings, two_disc_release(make_toc(LENGTHS), 2)) is None
+    two = rip_disc(tmp_path, 2)
+    assert one.folder == album / "Disc 1" and two.folder == album / "Disc 2"
+    assert sorted(p.name for p in two.folder.glob("*.flac")) == [
+        "01 - Song 1.flac",
+        "02 - Song 2.flac",
+        "03 - Song 3.flac",
+    ]
+    assert (two.folder / "Broadcasts Vol. 3 (Disc 2).cue").exists()
+    assert (album / "cover.jpg").exists() and (two.folder / "cover.jpg").exists()
+    tags = FLAC(str(two.tracks[1]))
+    assert tags["DISCNUMBER"] == ["2"] and tags["DISCTOTAL"] == ["2"]
+
+
+def test_multi_disc_without_subfolders_uses_prefix(tmp_path: Path) -> None:
+    out = rip_disc(tmp_path, 2, subfolders=False)
+    assert out.folder.name == "Broadcasts Vol. 3 (2001)"
+    assert sorted(p.name for p in out.folder.glob("*.flac"))[0] == "2-01 - Song 1.flac"

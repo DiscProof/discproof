@@ -56,6 +56,8 @@ class OutputSettings:
     replaygain: bool = True
     existing: ExistingPolicy = ExistingPolicy.SUFFIX
     workers: int | None = None
+    #: Multi-disc releases: one subfolder per disc ("Disc 1") instead of "1-01" names.
+    disc_subfolders: bool = True
 
 
 @dataclass(slots=True)
@@ -82,9 +84,17 @@ def _track_meta(release: ReleaseMeta, number: int) -> TrackMeta:
     return TrackMeta(number, f"Track {number:02d}", release.artist)
 
 
+def disc_folder_name(settings: OutputSettings, release: ReleaseMeta) -> str | None:
+    if settings.disc_subfolders and release.disc_total > 1:
+        return f"Disc {release.disc_number}"
+    return None
+
+
 def track_name(settings: OutputSettings, release: ReleaseMeta, number: int) -> tuple[Path, str]:
-    """(album folder, file name) for a track."""
+    """(folder, file name) for a track; the folder includes "Disc N" when per-disc
+    subfolders are used."""
     t = _track_meta(release, number)
+    disc_folder = disc_folder_name(settings, release)
     name = render(
         settings.template,
         track_fields(
@@ -100,7 +110,9 @@ def track_name(settings: OutputSettings, release: ReleaseMeta, number: int) -> t
             genre=release.genre,
             label=release.label,
             catalognumber=release.catalog_number,
+            disc_subfolders=disc_folder is not None,
         ),
+        disc_folder=disc_folder,
     )
     return settings.library.joinpath(*name.folder), name.stem + ".flac"
 
@@ -227,9 +239,12 @@ class AlbumWriter:
         cover_path: Path | None = None
         if self.cover is not None:
             cover_path = self.folder / "cover.jpg"
-            tmp = cover_path.with_suffix(".jpg.partial")
-            tmp.write_bytes(self.cover.cover_jpeg)
-            tmp.replace(cover_path)
+            _write_bytes(cover_path, self.cover.cover_jpeg)
+            if disc_folder_name(self.settings, self.release) is not None:
+                # Plex looks for multi-disc artwork in the album folder above "Disc N".
+                album_cover = self.folder.parent / "cover.jpg"
+                if not album_cover.exists():
+                    _write_bytes(album_cover, self.cover.cover_jpeg)
 
         report = self._report(rip, written)
         stem = sanitize(self.release.title or "Album") or "Album"
@@ -293,6 +308,12 @@ class AlbumWriter:
             replaygain=self.settings.replaygain,
             cancelled=rip.cancelled,
         )
+
+
+def _write_bytes(path: Path, data: bytes) -> None:
+    tmp = path.with_name(path.name + ".partial")
+    tmp.write_bytes(data)
+    tmp.replace(path)
 
 
 def _write_text(path: Path, text: str) -> None:

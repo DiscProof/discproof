@@ -77,3 +77,21 @@ def test_custom_template() -> None:
 def test_dangling_separator_from_empty_field_is_removed() -> None:
     n = render("{albumartist}/{album}/{tracknumber:02} - {title} - {label}", fields())
     assert n.stem == "01 - Slate"
+
+
+def test_disc_subfolder() -> None:
+    f = track_fields(
+        albumartist="Various Artists",
+        album="Broadcasts Vol. 3",
+        date="1995",
+        title="Song",
+        artist="Sonia Dada",
+        tracknumber=4,
+        tracktotal=18,
+        discnumber=2,
+        disctotal=2,
+        disc_subfolders=True,
+    )
+    n = render(DEFAULT_TEMPLATE, f, disc_folder="Disc 2")
+    assert n.folder == ("Various Artists", "Broadcasts Vol. 3 (1995)", "Disc 2")
+    assert n.stem == "04 - Song"  # no "2-" prefix inside a disc folder

@@ -98,9 +98,15 @@ def test_editing_album_and_tracks(backend: Any) -> None:
     )
     rows = backend.tracks.rows
     assert rows[0].title == "Lanterns (Intro)" and rows[1].artist == "Lantern Society"
-    assert backend.templatePreview(
-        "{albumartist}/{album}/{disc_prefix}{tracknumber:02} - {title}"
-    ) == ("Lantern Society/Estuary (Remaster)/1-01 - Lanterns (Intro).flac")
+    tpl = "{albumartist}/{album}/{disc_prefix}{tracknumber:02} - {title}"
+    # Multi-disc (disc 1 of 2): a "Disc 1" subfolder by default, "1-01" names if off.
+    assert backend.templatePreview(tpl) == (
+        "Lantern Society/Estuary (Remaster)/Disc 1/01 - Lanterns (Intro).flac"
+    )
+    backend.setSetting("disc_subfolders", False)
+    assert backend.templatePreview(tpl) == (
+        "Lantern Society/Estuary (Remaster)/1-01 - Lanterns (Intro).flac"
+    )
     assert backend.templatePreview("{nope}").startswith("⚠")
 
 

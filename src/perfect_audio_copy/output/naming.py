@@ -7,6 +7,10 @@ part is the track file's name (without extension). Field values are sanitized
 Fields: albumartist, album, year, date, title, artist, tracknumber, tracktotal,
 discnumber, disctotal, disc_prefix ("1-" on multi-disc releases, else ""), genre,
 label, catalognumber.
+
+Multi-disc releases can instead go into one subfolder per disc ("Disc 1", "Disc 2"):
+``render(..., disc_folder="Disc 1")`` puts that folder between the album folder and
+the file, and :func:`track_fields` then leaves ``disc_prefix`` empty.
 """
 
 from __future__ import annotations
@@ -82,8 +86,9 @@ def _tidy(component: str) -> str:
     return _DANGLING.sub("", text).strip() or text
 
 
-def render(template: str, fields: dict[str, Any]) -> TrackName:
-    """Apply the template. Raises TemplateError for unknown fields or bad syntax."""
+def render(template: str, fields: dict[str, Any], *, disc_folder: str | None = None) -> TrackName:
+    """Apply the template. Raises TemplateError for unknown fields or bad syntax.
+    ``disc_folder`` adds a per-disc subfolder just above the track file."""
     if not template.strip():
         raise TemplateError("the naming template is empty")
     safe: dict[str, Any] = {}
@@ -102,7 +107,10 @@ def render(template: str, fields: dict[str, Any]) -> TrackName:
     parts = [sanitize(p) or "_" for p in parts if p.strip()]
     if not parts:
         raise TemplateError("the template produces an empty file name")
-    return TrackName(tuple(parts[:-1]), parts[-1])
+    folder = parts[:-1]
+    if disc_folder:
+        folder.append(sanitize(disc_folder) or "_")
+    return TrackName(tuple(folder), parts[-1])
 
 
 def track_fields(
@@ -119,6 +127,7 @@ def track_fields(
     genre: str | None = None,
     label: str | None = None,
     catalognumber: str | None = None,
+    disc_subfolders: bool = False,
 ) -> dict[str, Any]:
     return {
         "albumartist": albumartist or artist or "Unknown Artist",
@@ -131,7 +140,7 @@ def track_fields(
         "tracktotal": tracktotal,
         "discnumber": discnumber,
         "disctotal": disctotal,
-        "disc_prefix": f"{discnumber}-" if disctotal > 1 else "",
+        "disc_prefix": f"{discnumber}-" if disctotal > 1 and not disc_subfolders else "",
         "genre": genre or "",
         "label": label or "",
         "catalognumber": catalognumber or "",

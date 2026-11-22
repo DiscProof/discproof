@@ -24,6 +24,7 @@ HTOA = ("discard", "track00")
 class AppSettings:
     library: str = str(Path.home() / "Music")
     template: str = "{albumartist}/{album} ({year})/{disc_prefix}{tracknumber:02} - {title}"
+    disc_subfolders: bool = True  # multi-disc sets: "Disc 1", "Disc 2" subfolders
     mode: str = "secure"
     test_and_copy: bool = False
     quality: str = "high"

@@ -42,7 +42,7 @@ from perfect_audio_copy.engine.extract import Extractor, track_spans
 from perfect_audio_copy.engine.profile import DriveProfile, ExtractionSettings, Mode, Quality
 from perfect_audio_copy.engine.source import AudioSource
 from perfect_audio_copy.metadata.coverart import Cover, CoverError, prepare_cover
-from perfect_audio_copy.metadata.model import ReleaseMeta, Source
+from perfect_audio_copy.metadata.model import ReleaseMeta, Source, TrackMeta
 from perfect_audio_copy.metadata.service import MetadataService, blank_release, release_from_cdtext
 from perfect_audio_copy.metadata.web import ResponseCache, Web
 from perfect_audio_copy.output.album import (
@@ -51,8 +51,9 @@ from perfect_audio_copy.output.album import (
     ExistingPolicy,
     OutputSettings,
     folder_conflict,
+    track_name,
 )
-from perfect_audio_copy.output.naming import TemplateError, render, track_fields
+from perfect_audio_copy.output.naming import TemplateError
 from perfect_audio_copy.ui.backend.dispatch import Dispatcher, run_in_thread
 from perfect_audio_copy.ui.backend.images import CoverProvider, SectorMaps
 from perfect_audio_copy.ui.backend.models import TrackModel, TrackRow
@@ -829,23 +830,34 @@ class Backend(QObject):
 
     @Slot(str, result=str)
     def templatePreview(self, template: str) -> str:
+        """Where track 1 would go. Shows disc 2 of a 2-disc set when the loaded album
+        is single-disc, so the multi-disc layout is visible too."""
         r = self._release
-        fields = track_fields(
-            albumartist=r.artist if r else "Uncle Tupelo",
-            album=r.title if r else "Anodyne",
+        multi = r is not None and r.disc_total > 1
+        disc_number, disc_total = (r.disc_number, r.disc_total) if multi and r else (2, 2)
+        sample = ReleaseMeta(
+            Source.MANUAL,
+            r.title if r else "Anodyne",
+            r.artist if r else "Uncle Tupelo",
+            [
+                TrackMeta(
+                    1,
+                    r.tracks[0].title if r and r.tracks else "Slate",
+                    r.tracks[0].artist if r and r.tracks else "Uncle Tupelo",
+                )
+            ],
             date=r.date if r else "1993",
-            title=(r.tracks[0].title if r and r.tracks else "Slate"),
-            artist=(r.tracks[0].artist if r and r.tracks else "Uncle Tupelo"),
-            tracknumber=1,
-            tracktotal=len(r.tracks) if r else 12,
-            discnumber=r.disc_number if r else 1,
-            disctotal=r.disc_total if r else 1,
+            disc_number=disc_number,
+            disc_total=disc_total,
+        )
+        settings = replace(
+            self._output_settings(ExistingPolicy.SUFFIX), template=template, library=Path()
         )
         try:
-            name = render(template, fields)
+            folder, filename = track_name(settings, sample, 1)
         except TemplateError as exc:
             return f"⚠ {exc}"
-        return "/".join((*name.folder, name.stem + ".flac"))
+        return "/".join((*folder.parts, filename))
 
     # ------------------------------------------------------------ ripping
 
@@ -857,6 +869,7 @@ class Backend(QObject):
             s.flac_level,
             s.replaygain,
             policy,
+            disc_subfolders=s.disc_subfolders,
         )
 
     def _extraction_settings(self, mode: str | None = None) -> ExtractionSettings:

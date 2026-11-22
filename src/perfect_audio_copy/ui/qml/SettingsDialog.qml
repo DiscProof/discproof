@@ -58,7 +58,7 @@ PDialog {
                 kind: "caption"
                 font.family: Theme.fontNum
                 // Depends on the album too, so the preview follows lookups/edits.
-                text: { backend.album.title; backend.album.artist; return backend.templatePreview(tpl.text) }
+                text: { backend.album.title; backend.album.artist; root.s.disc_subfolders; return backend.templatePreview(tpl.text) }
                 color: text.startsWith("⚠") ? Theme.negative : Theme.textMuted
                 elide: Text.ElideMiddle
             }
@@ -69,6 +69,12 @@ PDialog {
                 wrapMode: Text.WordWrap
                 elide: Text.ElideNone
                 text: qsTr("Fields: {albumartist} {album} {year} {title} {artist} {tracknumber:02} {disc_prefix} {discnumber} {genre} {label}. Use / for folders.")
+            }
+            PSwitch {
+                Layout.fillWidth: true
+                text: qsTr("Put each disc of a multi-disc set in its own folder (Disc 1, Disc 2…)")
+                checked: root.s.disc_subfolders
+                onToggled: root.set("disc_subfolders", checked)
             }
 
             SectionHeader { text: qsTr("Ripping") }
