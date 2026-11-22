@@ -1,6 +1,6 @@
 # Perfect Audio Copy — Build Prompt
 
-You are building **Perfect Audio Copy (PAC)**, a Linux desktop application for Fedora KDE Plasma that makes bit-exact, verified copies of audio CDs into FLAC. It follows the ideas of Exact Audio Copy (EAC); read `Exact Audio Copy (EAC).md` in the repo for the behavior to replicate. Work in phases, keep the test suite green at every step, and commit after each phase.
+You are building **Perfect Audio Copy (PAC)**, a Linux desktop application for Fedora KDE Plasma that makes bit-exact, verified copies of audio CDs into FLAC. It follows the ideas of Exact Audio Copy (EAC); see its documentation at https://www.exactaudiocopy.de for the behavior to replicate. Work in phases, keep the test suite green at every step, and commit after each phase.
 
 ### Product goal
 Insert a CD, and PAC identifies it online, shows album info and cover art, rips every track securely, and verifies the result against AccurateRip. It then writes one folder per album:

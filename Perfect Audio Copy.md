@@ -8,7 +8,7 @@ I want a sleek modern graphical interface that I can use on my Fedora KDE laptop
 
 <br>
 
-See the file Exact Audio Copy (EAC).md for a description of how that program worked. 
+See the EAC website (https://www.exactaudiocopy.de) for a description of how that program worked. 
 
 <br>
 

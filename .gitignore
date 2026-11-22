@@ -12,3 +12,6 @@ htmlcov/
 # local rip output / scratch audio
 *.wav
 !tests/fixtures/**/*.wav
+
+# Copyrighted reference text kept locally (from exactaudiocopy.de); never publish.
+Exact Audio Copy (EAC).md
