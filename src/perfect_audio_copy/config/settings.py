@@ -34,6 +34,7 @@ class AppSettings:
     use_discogs: bool = True
     discogs_token: str = ""
     htoa: str = "discard"  # rip the hidden track before track 1 as track 00?
+    detect_gaps: bool = True  # find pre-gaps (CUE INDEX 00, log) before ripping
     existing: str = "ask"
     eject_when_done: bool = True
     auto_lookup: bool = True

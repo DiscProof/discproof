@@ -111,6 +111,7 @@ Card {
             PLabel {
                 kind: "strong"
                 text: backend.rip.paused ? qsTr("Paused")
+                    : backend.rip.pass === "gaps" ? qsTr("Detecting gaps… %1").arg(backend.rip.gaps || "")
                     : backend.rip.track ? qsTr("Track %1").arg(backend.rip.track) + (backend.rip.pass === "test" ? qsTr(" · test pass") : "")
                     : qsTr("Starting…")
             }

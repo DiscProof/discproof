@@ -28,6 +28,14 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--demo", action="store_true", help="run against a simulated drive (no CD, offline)"
     )
+    parser.add_argument(
+        "--install-desktop",
+        action="store_true",
+        help="add the app to the application menu for this user (for uv/pipx installs)",
+    )
+    parser.add_argument(
+        "--uninstall-desktop", action="store_true", help="remove what --install-desktop added"
+    )
     parser.add_argument("--demo-rip", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--demo-speed", type=float, default=12.0, help=argparse.SUPPRESS)
     parser.add_argument("--screenshot", metavar="PNG", help=argparse.SUPPRESS)
@@ -43,6 +51,17 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: PLR0915
     argv = list(sys.argv if argv is None else argv)
     args = _parse_args(argv[1:])
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
+
+    if args.install_desktop or args.uninstall_desktop:
+        from perfect_audio_copy import desktop_install
+
+        if args.install_desktop:
+            for path in desktop_install.install():
+                print(f"installed {path}")
+        else:
+            for path in desktop_install.uninstall():
+                print(f"removed {path}")
+        return 0
 
     # Qt is imported lazily so `--version`/`--help` work without a display.
     from PySide6.QtCore import QTimer

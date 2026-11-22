@@ -90,6 +90,13 @@ On 2026-11-22 this was done with the HL-DT-ST GP75N (offset +6, cache defeated b
 
 UI logic is tested headlessly through the demo (`tests/ui`), and the smoke tests load the full window and fail on any QML warning.
 
+### Phase 7 — gaps and packaging
+
+- Rip a disc with known pre-gaps (most pressed CDs have 2 s gaps; compare with EAC's or a player's negative countdown). Check the Gap column, the log's "Pre-gap length … (silent)" lines and the CUE sheet's `INDEX 00` entries.
+- A disc with a hidden track before track 1: the log says whether it contains audio, and "Rip as track 00" rips it.
+- Build the RPM (`scripts/build-rpm.sh`), install it, and check that the menu entry and icon appear and that inserting an audio CD offers "Rip with Perfect Audio Copy" in Plasma's device notifier.
+- pipx install plus `--install-desktop`: the menu entry starts the pipx copy.
+
 ### Later phases
 
 - Rip a common pressed CD and confirm an AccurateRip match.

@@ -120,6 +120,9 @@ class VirtualDrive:
         c2_false_rate: float = 0.0,
         max_speed: float = 24.0,
         pregaps: dict[int, int] | None = None,
+        q_lag: int = 0,
+        q_error_rate: float = 0.0,
+        q_mode23_rate: float = 0.0,
         seed: int = 0,
     ) -> None:
         if len(audio) % SECTOR_SIZE:
@@ -144,6 +147,11 @@ class VirtualDrive:
         self.max_speed = max_speed
         self.speed: float | None = None
         self.pregaps = dict(pregaps or {})
+        #: Q returned for a sector belongs to ``lba + q_lag`` (drives often lag).
+        self.q_lag = q_lag
+        #: Probability a Q frame fails its CRC / carries MCN or ISRC (ADR 2/3).
+        self.q_error_rate = q_error_rate
+        self.q_mode23_rate = q_mode23_rate
         self.stats = VirtualDriveStats()
         self._rng = np.random.default_rng(seed)
         self._cache: _Segment | None = None
@@ -205,7 +213,7 @@ class VirtualDrive:
         if c2:
             mask = seg.c2[start * BYTES_PER_SAMPLE : (start + count * SAMPLES_PER_SECTOR) * 4]
             c2_bytes = np.packbits(mask).tobytes()
-        qs = tuple(self.q_record(lba + i) for i in range(count)) if subq else None
+        qs = tuple(self._q_read(lba + i) for i in range(count)) if subq else None
         return SectorRead(lba, count, samples.astype("<u4").tobytes(), c2_bytes, qs)
 
     # ------------------------------------------------------------ internals
@@ -282,6 +290,17 @@ class VirtualDrive:
         if flag:
             for h in hits:
                 c2[int(h) * BYTES_PER_SAMPLE : (int(h) + 1) * BYTES_PER_SAMPLE] = True
+
+    def _q_read(self, lba: int) -> bytes:
+        """Q as a drive returns it: possibly lagging, sometimes ADR 2/3, sometimes
+        corrupted (bad CRC)."""
+        if self.q_mode23_rate and self._rng.random() < self.q_mode23_rate:
+            body = bytes([0x02]) + bytes(9)  # ADR 2 (MCN) frame without position
+            return (body + cd_crc16(body).to_bytes(2, "big")).ljust(SUBQ_SIZE, b"\x00")
+        q = bytearray(self.q_record(lba + self.q_lag))
+        if self.q_error_rate and self._rng.random() < self.q_error_rate:
+            q[int(self._rng.integers(1, 10))] ^= 0x01  # CRC no longer matches
+        return bytes(q)
 
     def q_record(self, lba: int) -> bytes:
         """Formatted Q (ADR 1) for a nominal LBA, honouring ``pregaps`` as INDEX 00."""

@@ -72,7 +72,8 @@ def _settings(report: AlbumReport) -> list[str]:
         f"Overread into Lead-In and Lead-Out          : "
         f"{_yn(p.overread_leadin and p.overread_leadout)}",
         "Fill up missing offset samples with silence : Yes",
-        "Gap handling                                : Appended to previous track",
+        "Gap handling                                : Appended to previous track"
+        + ("" if any(t.pregap is not None for t in report.tracks) else " (gaps not detected)"),
         f"Error recovery quality                      : {s.quality.name.title()} "
         f"(up to {rounds} round{'s' if rounds > 1 else ''} of {s.reads_per_round} reads)",
         f"Test & Copy                                 : {_yn(s.test_and_copy)}",
@@ -142,6 +143,8 @@ def _track(t: TrackReport, report: AlbumReport) -> list[str]:
     lines = [label, "", f"     Filename {t.filename}", ""]
     if t.number > 0:
         gap = "unknown (not detected)" if t.pregap is None else frames_to_timestamp(t.pregap)
+        if t.pregap and t.pregap_silent is not None:
+            gap += " (silent)" if t.pregap_silent else " (contains audio)"
         lines += [f"     Pre-gap length  {gap}", ""]
     rip = t.rip
     if rip is None:

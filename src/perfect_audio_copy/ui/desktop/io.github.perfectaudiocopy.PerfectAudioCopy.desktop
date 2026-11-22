@@ -3,11 +3,11 @@ Type=Application
 Name=Perfect Audio Copy
 GenericName=Audio CD Ripper
 Comment=Rip audio CDs to FLAC with secure, verified extraction
-Exec=perfect-audio-copy %U
+Exec=perfect-audio-copy
 Icon=io.github.perfectaudiocopy.PerfectAudioCopy
 Terminal=false
-Categories=AudioVideo;Audio;Qt;KDE;
-Keywords=cd;rip;ripper;flac;accuraterip;audio;music;
+Categories=AudioVideo;Audio;DiscBurning;Qt;
+Keywords=cd;rip;ripper;flac;accuraterip;audio;music;musicbrainz;
 StartupNotify=true
 StartupWMClass=perfect-audio-copy
-X-KDE-Solid-Predicate=[ StorageVolume.ignored == false AND OpticalDisc.availableContent & 'Audio' ]
+SingleMainWindow=true

@@ -57,7 +57,13 @@ def test_full_rip_reports_results(backend: Any) -> None:
     assert all(len(r.crc) == 8 for r in rows.values())
     folder = Path(res["folder"])
     assert len(list(folder.glob("*.flac"))) == 8 and (folder / "cover.jpg").exists()
-    assert "Suspicious position" in backend.logText()
+    log = backend.logText()
+    assert "Suspicious position" in log
+    # Gaps (demo: 2 s before tracks 2 and 4, 1 s before 6; Q lags a sector).
+    assert (rows[2].pregap, rows[3].pregap, rows[6].pregap) == ("0:02.00", "—", "0:01.00")
+    assert "Pre-gap length  0:02.00 (silent)" in log
+    cue = next(folder.glob("*.cue")).read_text()
+    assert cue.count("INDEX 00") == 3
     # Sector map: track 3 has recovered sectors, track 5 a suspicious one.
     _, _, rec3, sus3 = backend.sector_maps.counts(3)
     _, _, _, sus5 = backend.sector_maps.counts(5)
@@ -284,3 +290,30 @@ def test_unconfigured_drive_uses_drive_list_offset(qapp: object, tmp_path: Path)
     assert profile["offset"] == 6 and not profile["configured"]
     rec = b.store.get("DEMO", "Virtual CD-ROM", "1.0")
     assert rec is not None and rec.profile.read_offset == 6  # saved
+
+
+def test_cancel_during_gap_detection(qapp: object, tmp_path: Path) -> None:
+    import time as _time
+
+    from perfect_audio_copy.ui.backend.controller import Backend
+    from perfect_audio_copy.ui.backend.demo import demo_backend_kwargs
+
+    kw = demo_backend_kwargs(speed=0)
+    session = kw["drive_factory"]("x")
+    real = session.read_cd
+
+    def slow(lba, count, **k):  # type: ignore[no-untyped-def]
+        if k.get("subq"):
+            _time.sleep(0.02)  # make gap detection take a while
+        return real(lba, count, **k)
+
+    session.read_cd = slow
+    b = Backend(**kw)
+    b.refreshDrives()
+    wait_until(lambda: b.property("state") == "ready" and b.property("coverUrl") != "")
+    b.startRip("")
+    wait_until(lambda: b.property("rip").get("pass") == "gaps")
+    b.cancelRip()
+    wait_until(lambda: b.property("state") == "ready")
+    assert b.property("message") == "Rip cancelled"
+    assert not b.property("results")["visible"]

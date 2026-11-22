@@ -98,6 +98,12 @@ PDialog {
                     onActivated: (i) => root.set("htoa", i === 1 ? "track00" : "discard")
                 }
             }
+            PSwitch {
+                Layout.fillWidth: true
+                text: qsTr("Detect pre-gaps before ripping (for the CUE sheet and log)")
+                checked: root.s.detect_gaps
+                onToggled: root.set("detect_gaps", checked)
+            }
             Row2 {
                 label: qsTr("When the album folder exists")
                 PComboBox {

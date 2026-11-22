@@ -12,7 +12,7 @@ Make use of C2 pointers : No
 Read offset correction                      : 6
 Overread into Lead-In and Lead-Out          : No
 Fill up missing offset samples with silence : Yes
-Gap handling                                : Appended to previous track
+Gap handling                                : Appended to previous track (gaps not detected)
 Error recovery quality                      : High (up to 5 rounds of 16 reads)
 Test & Copy                                 : No
 Hidden track one audio                      : None
@@ -56,4 +56,4 @@ Extraction was cancelled
 
 End of status report
 
-==== Log checksum D3283853EC3D292C0E6B8B460B1D5F3D79F4CAD6B845546F049F80F5FFA9FB4E ====
+==== Log checksum 3CBC31925A50443EDE7B2454FF009CE75245D216B9324E0BFC4A2D28433CEA83 ====

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import copy
 import datetime as dt
+import functools
 import logging
 import threading
 import time
@@ -27,6 +28,7 @@ from perfect_audio_copy.config.drives import DriveRecord, DriveStore, OffsetSour
 from perfect_audio_copy.config.settings import load_settings, save_settings
 from perfect_audio_copy.drive.device import DiscInfo, Drive
 from perfect_audio_copy.drive.enumerate import DriveInfo, list_drives
+from perfect_audio_copy.drive.msf import frames_to_timestamp
 from perfect_audio_copy.drive.sense import DriveError, MediumNotPresentError, NotReadyError
 from perfect_audio_copy.engine.events import (
     BlockDone,
@@ -39,6 +41,7 @@ from perfect_audio_copy.engine.events import (
     TrackDone,
 )
 from perfect_audio_copy.engine.extract import Extractor, track_spans
+from perfect_audio_copy.engine.gaps import GapDetector, GapResult
 from perfect_audio_copy.engine.profile import DriveProfile, ExtractionSettings, Mode, Quality
 from perfect_audio_copy.engine.source import AudioSource
 from perfect_audio_copy.metadata.coverart import Cover, CoverError, prepare_cover
@@ -960,6 +963,8 @@ class Backend(QObject):
         self._pass_index = 0
         gen = self._generation
         eject = self._settings.eject_when_done
+        cancel = threading.Event()
+        self._rip_cancel = cancel
 
         def work() -> None:
             output: AlbumOutput | None = None
@@ -972,6 +977,10 @@ class Backend(QObject):
                 self._post(lambda: self._rip_failed(gen, msg))
                 return
             try:
+                pregaps, silence, notes = self._detect_gaps(drive, disc, settings, gen, cancel)
+                if cancel.is_set():
+                    self._post(lambda: self._rip_failed(gen, "Rip cancelled"))
+                    return
                 writer = AlbumWriter(
                     out_settings,
                     release,
@@ -983,6 +992,9 @@ class Backend(QObject):
                     ar_responses=ar_responses,
                     ar_in_database=ar_in_db,
                     ar_error=ar_error,
+                    pregaps=pregaps,
+                    gap_silence=silence,
+                    notes=notes,
                 )
                 if writer.prepare() is None:
                     self._post(lambda: self._rip_failed(gen, "The album folder already exists"))
@@ -1022,6 +1034,69 @@ class Backend(QObject):
         run_in_thread("rip", work)
 
     # Called on the rip thread.
+    def _detect_gaps(
+        self,
+        drive: DriveSession,
+        disc: DiscInfo,
+        settings: ExtractionSettings,
+        gen: int,
+        cancel: threading.Event,
+    ) -> tuple[dict[int, int], dict[int, bool | None], list[str]]:
+        """Pre-gaps of the ripped tracks and of the tracks after them (their INDEX 00
+        lies in the ripped file), plus track 1's hidden-track check."""
+        if not self._settings.detect_gaps:
+            return {}, {}, []
+        toc = disc.toc
+        audio = [t.number for t in toc.audio_tracks]
+        selected = set(settings.tracks or audio)
+        wanted = sorted((selected | {n + 1 for n in selected} | {audio[0]}) & set(audio))
+        self._post(lambda: self._gaps_progress(gen, 0, len(wanted)))
+        detector = GapDetector(drive, toc)
+        results: dict[int, GapResult] = {}
+        for i, n in enumerate(wanted):
+            if cancel.is_set():
+                break
+            results[n] = detector.detect(n)
+            self._post(functools.partial(self._gaps_progress, gen, i + 1, len(wanted)))
+        pregaps = {n: r.pregap for n, r in results.items()}
+        silence = {n: r.silent for n, r in results.items()}
+        notes: list[str] = []
+        first = toc.track(audio[0])
+        htoa = results.get(first.number)
+        if (
+            first.number == 1
+            and first.start > 0
+            and htoa is not None
+            and htoa.silent is False
+            and not settings.rip_htoa
+        ):
+            notes.append(
+                f"The hidden track before track 1 ({frames_to_timestamp(first.start)}) "
+                'contains audio and was not ripped; choose "Rip as track 00" in Settings '
+                "to keep it"
+            )
+        for n, r in sorted(results.items()):
+            if r.pregap and not r.confirmed and n != first.number:
+                notes.append(f"The pre-gap of track {n} could not be confirmed (±2 sectors)")
+        self._post(lambda: self._gaps_done(gen, results))
+        return pregaps, silence, notes
+
+    def _gaps_progress(self, gen: int, done: int, total: int) -> None:
+        if gen != self._generation:
+            return
+        self._rip["pass"] = "gaps"
+        self._rip["gaps"] = f"{done}/{total}"
+        self.ripChanged.emit()
+
+    def _gaps_done(self, gen: int, results: dict[int, GapResult]) -> None:
+        if gen != self._generation:
+            return
+        for n, r in results.items():
+            gap = "—" if r.pregap == 0 else frames_to_timestamp(r.pregap)
+            self.tracks.update(n, pregap=gap)
+        self._rip["pass"] = ""
+        self.ripChanged.emit()
+
     def _on_event(self, gen: int, event: Event, writer: AlbumWriter) -> None:
         if isinstance(event, BlockDone):
             touched = self.sector_maps.mark(event.lba, list(event.statuses))
@@ -1190,9 +1265,12 @@ class Backend(QObject):
 
     @Slot()
     def cancelRip(self) -> None:
+        cancel = getattr(self, "_rip_cancel", None)
+        if cancel is not None:
+            cancel.set()  # also stops gap detection, which runs before extraction
         if self._extractor is not None:
             self._extractor.cancel()
-            self._set_message("Cancelling…")
+        self._set_message("Cancelling…")
 
     # ------------------------------------------------------------ results & misc
 

@@ -45,6 +45,7 @@ TITLES = [
     "Last Light Over the Estuary",
 ]
 SECONDS = [94, 71, 108, 63, 86, 77, 69, 122]
+PREGAPS = {2: 150, 4: 150, 6: 75}  # silent INDEX 00 gaps, as on most CDs
 
 
 @dataclass(frozen=True)
@@ -65,6 +66,9 @@ def _disc() -> tuple[bytes, Toc]:
     right = np.roll(left, 40)
     pcm = np.empty(2 * n, dtype="<i2")
     pcm[0::2], pcm[1::2] = left, right
+    for number, gap in PREGAPS.items():
+        start = toc.track(number).start
+        pcm[(start - gap) * SAMPLES_PER_SECTOR * 2 : start * SAMPLES_PER_SECTOR * 2] = 0
     return pcm.tobytes(), toc
 
 
@@ -75,7 +79,9 @@ class DemoDrive:
     def __init__(self, audio: bytes, toc: Toc, *, seconds_per_sector: float) -> None:
         t3, t5 = toc.track(3).start, toc.track(5).start
         weak = {lba: 0.45 for lba in range(t3 + 900, t3 + 930)}
-        self.drive = VirtualDrive(audio, toc, weak=weak, bad={t5 + 2000}, seed=3)
+        self.drive = VirtualDrive(
+            audio, toc, weak=weak, bad={t5 + 2000}, pregaps=PREGAPS, q_lag=1, seed=3
+        )
         self.toc = toc
         self.delay = seconds_per_sector
 

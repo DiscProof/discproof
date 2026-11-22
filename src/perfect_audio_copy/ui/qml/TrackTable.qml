@@ -13,6 +13,7 @@ Card {
     readonly property int wNum: 36
     readonly property int wArtist: Math.max(140, width * 0.22)
     readonly property int wLength: 64
+    readonly property int wGap: 64
     readonly property int wStatus: 128
     readonly property int wCrc: 92
 
@@ -46,6 +47,7 @@ Card {
                 PLabel { Layout.fillWidth: true; kind: "strong"; color: Theme.textMuted; text: qsTr("Title"); leftPadding: Theme.s2 }
                 PLabel { Layout.preferredWidth: root.wArtist; kind: "strong"; color: Theme.textMuted; text: qsTr("Artist") }
                 PLabel { Layout.preferredWidth: root.wLength; kind: "strong"; color: Theme.textMuted; text: qsTr("Length"); horizontalAlignment: Text.AlignRight }
+                PLabel { Layout.preferredWidth: root.wGap; kind: "strong"; color: Theme.textMuted; text: qsTr("Gap"); horizontalAlignment: Text.AlignRight }
                 PLabel { Layout.preferredWidth: root.wStatus; kind: "strong"; color: Theme.textMuted; text: qsTr("Status"); leftPadding: Theme.s3 }
                 PLabel { Layout.preferredWidth: root.wCrc; kind: "strong"; color: Theme.textMuted; text: qsTr("CRC"); horizontalAlignment: Text.AlignRight }
             }
@@ -67,6 +69,7 @@ Card {
                 required property string title
                 required property string artist
                 required property string length
+                required property string pregap
                 required property bool selected
                 required property string status
                 required property string crc
@@ -127,6 +130,13 @@ Card {
                         kind: "num"
                         text: row.length
                         color: row.selected ? Theme.text : Theme.textFaint
+                        horizontalAlignment: Text.AlignRight
+                    }
+                    PLabel {
+                        Layout.preferredWidth: root.wGap
+                        kind: "num"
+                        text: row.pregap
+                        color: row.pregap === "—" ? Theme.textFaint : Theme.textMuted
                         horizontalAlignment: Text.AlignRight
                     }
                     Item {
