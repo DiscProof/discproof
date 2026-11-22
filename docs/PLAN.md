@@ -1,7 +1,7 @@
 # Perfect Audio Copy — Project Plan
 
 ## Context
-The user wants a modern Linux (Fedora KDE) desktop app, **Perfect Audio Copy (PAC)**, that does what Exact Audio Copy (EAC) did on Windows: bit-exact secure ripping of audio CDs to FLAC, with internet metadata and cover art, a verifiable rip log, and output that Plex reads cleanly. The repo (`/home/stager/Projects/perfect-audio-copy`) holds only the two spec documents, `Perfect Audio Copy.md` and `Exact Audio Copy (EAC).md`. This document is the project plan. The companion [BUILD_PROMPT.md](BUILD_PROMPT.md) is a self-contained prompt that a coding agent can follow to build the app phase by phase.
+The user wants a modern Linux (Fedora KDE) desktop app, **Perfect Audio Copy (PAC)**, that does what Exact Audio Copy (EAC) did on Windows: bit-exact secure ripping of audio CDs to FLAC, with internet metadata and cover art, a verifiable rip log, and output that Plex reads cleanly. At the start, the repository held only the two spec documents, `Perfect Audio Copy.md` and `Exact Audio Copy (EAC).md`. This document is the project plan. The companion [BUILD_PROMPT.md](BUILD_PROMPT.md) is a self-contained prompt that a coding agent can follow to build the app phase by phase.
 
 Decisions confirmed with the user:
 - Stack: **Python 3.12+ / PySide6 (Qt 6) / QML**, styled to feel native on KDE Plasma.
