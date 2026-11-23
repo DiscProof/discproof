@@ -65,7 +65,7 @@ print(svc.cover(res.releases[res.preselected or 0]))"
 
 Check that a common pressed CD is found by disc ID (`exact=True`) and preselected, that the track titles match the case, and that a cover of at least 1000 px is found. Compare the disc ID with what MusicBrainz shows for that release. A disc that MusicBrainz doesn't know should fall back to a TOC match, then Discogs (by its MCN), then CD-Text.
 
-The User-Agent carries a placeholder contact URL (`PROJECT_URL` in `src/perfect_audio_copy/__init__.py`) until the project has a public home. Replace it before release.
+The User-Agent names the app and its home page (`PROJECT_URL` in `src/perfect_audio_copy/__init__.py`), as MusicBrainz asks.
 
 ### Phase 5 — output
 

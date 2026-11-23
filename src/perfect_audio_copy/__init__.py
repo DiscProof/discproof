@@ -5,11 +5,9 @@ from importlib.metadata import PackageNotFoundError, version
 APP_NAME = "Perfect Audio Copy"
 APP_ID = "io.github.perfectaudiocopy.PerfectAudioCopy"
 APP_SLUG = "perfect-audio-copy"
-#: Contact URL sent to web services (MusicBrainz requires one in the User-Agent).
-#: PLACEHOLDER on the reserved .invalid domain until the project has a real home
-#: (e.g. its GitHub repository). Replace before release: MusicBrainz may throttle
-#: clients without a reachable contact.
-PROJECT_URL = "https://perfect-audio-copy.invalid"
+#: Project home; also the contact URL sent to web services (MusicBrainz requires one
+#: in the User-Agent).
+PROJECT_URL = "https://github.com/perfectaudiocopy/perfect-audio-copy"
 
 try:
     __version__ = version("perfect-audio-copy")

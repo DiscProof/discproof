@@ -44,8 +44,7 @@ def test_launcher_is_valid() -> None:
 
 
 @pytest.mark.skipif(not shutil.which("appstreamcli"), reason="appstream missing")
-def test_metainfo_is_valid_apart_from_homepage() -> None:
-    """Only the homepage URL is missing (the project has no public home yet)."""
+def test_metainfo_is_valid() -> None:
     proc = subprocess.run(
         [
             "appstreamcli",
@@ -63,4 +62,4 @@ def test_metainfo_is_valid_apart_from_homepage() -> None:
         for ln in proc.stdout.splitlines()
         if ln.strip().startswith("- tag:")
     ]
-    assert set(tags) <= {"url-homepage-missing"}, proc.stdout
+    assert tags == [], proc.stdout

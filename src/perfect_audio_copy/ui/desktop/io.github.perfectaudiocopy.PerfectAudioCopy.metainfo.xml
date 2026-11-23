@@ -25,6 +25,9 @@
       <li>Plex-friendly folders, with a folder per disc for multi-disc sets</li>
     </ul>
   </description>
+  <url type="homepage">https://github.com/perfectaudiocopy/perfect-audio-copy</url>
+  <url type="bugtracker">https://github.com/perfectaudiocopy/perfect-audio-copy/issues</url>
+  <url type="vcs-browser">https://github.com/perfectaudiocopy/perfect-audio-copy</url>
   <launchable type="desktop-id">io.github.perfectaudiocopy.PerfectAudioCopy.desktop</launchable>
   <provides>
     <binary>perfect-audio-copy</binary>
