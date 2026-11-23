@@ -20,7 +20,7 @@ from dataclasses import dataclass, field, replace
 import numpy as np
 import numpy.typing as npt
 
-from perfect_audio_copy.drive.constants import SAMPLES_PER_SECTOR, SECTOR_SIZE
+from perfect_audio_copy.drive.constants import C2_SIZE, SAMPLES_PER_SECTOR, SECTOR_SIZE
 from perfect_audio_copy.drive.sense import DriveError, IllegalRequestError
 from perfect_audio_copy.drive.toc import Toc
 from perfect_audio_copy.engine.profile import CacheDefeat, DriveProfile
@@ -51,7 +51,7 @@ class CacheResult:
 @dataclass(frozen=True, slots=True)
 class C2Result:
     supported: bool
-    errors_seen: int = 0  # sector reads that differed from the majority
+    errors_seen: int = 0  # sector reads that differed from the clean reference
     missed: int = 0  # ... of which C2 did not flag
     false_flags: int = 0  # flagged sector reads whose data was fine
     sectors_tested: int = 0
@@ -127,9 +127,10 @@ class FeatureDetector:
             out.append(p)
         return sorted(set(out))
 
-    def _read(self, lba: int, count: int, *, c2: bool = False) -> tuple[bytes, list[bool]] | None:
+    def _read(self, lba: int, count: int, *, c2: bool = False) -> tuple[bytes, list[bytes]] | None:
+        """Audio, plus each sector's C2 pointer bytes (one bit per audio byte) if asked."""
         audio = bytearray()
-        flags: list[bool] = []
+        pointers: list[bytes] = []
         pos = lba
         try:
             while pos < lba + count:
@@ -138,12 +139,11 @@ class FeatureDetector:
                 audio += r.audio
                 if c2:
                     for i in range(n):
-                        c = r.c2[i * 294 : (i + 1) * 294] if r.c2 else b""
-                        flags.append(any(c))
+                        pointers.append(r.c2_for(i) or bytes(C2_SIZE))
                 pos += n
         except DriveError:
             return None
-        return bytes(audio), flags
+        return bytes(audio), pointers
 
     def _timed(self, lba: int, count: int) -> tuple[float | None, bytes | None]:
         t0 = self.clock()
@@ -283,7 +283,7 @@ class FeatureDetector:
         for start in starts:
             n = min(PROBE_SECTORS, self.hi - start)
             versions: list[list[bytes]] = [[] for _ in range(n)]
-            flags: list[list[bool]] = [[] for _ in range(n)]
+            pointers: list[list[bytes]] = [[] for _ in range(n)]
             for _ in range(reads):
                 self._defeat(start, n)
                 got = self._read(start, n, c2=True)
@@ -292,19 +292,15 @@ class FeatureDetector:
                 audio, fl = got
                 for i in range(n):
                     versions[i].append(audio[i * SECTOR_SIZE : (i + 1) * SECTOR_SIZE])
-                    flags[i].append(fl[i])
+                    pointers[i].append(fl[i])
             for i in range(n):
-                if not versions[i]:
+                verdict = _judge_c2(versions[i], pointers[i])
+                if verdict is None:
                     continue
-                majority, votes = Counter(versions[i]).most_common(1)[0]
-                if votes * 2 <= len(versions[i]):
-                    continue  # no clear majority: cannot tell right from wrong
                 sectors += 1
-                for v, f in zip(versions[i], flags[i], strict=True):
-                    wrong = v != majority
-                    errors += wrong
-                    missed += wrong and not f
-                    false_flags += f and not wrong
+                errors += verdict[0]
+                missed += verdict[1]
+                false_flags += verdict[2]
         return C2Result(True, errors, missed, false_flags, sectors)
 
     def detect_overread(self) -> tuple[bool, bool]:
@@ -326,6 +322,40 @@ class FeatureDetector:
             )
         lead_in, lead_out = self.detect_overread()
         return FeatureReport(cache, accurate, consistent, c2, lead_in, lead_out, tuple(self.notes))
+
+
+def _judge_c2(versions: list[bytes], pointers: list[bytes]) -> tuple[int, int, int] | None:
+    """Score one sector's reads: (wrong reads, wrong reads C2 missed, flagged reads
+    that were fine), or None if the sector cannot be judged.
+
+    The reference is the majority among the *unflagged* reads only. Drives conceal
+    uncorrectable errors, and the concealment is often repeatable: on a scratch the
+    flagged reads can be identical and outnumber the clean ones. A plain majority
+    would then take the concealed data as correct and count every clean read as a
+    missed error.
+
+    C2 is checked byte by byte: a wrong read is only caught if every byte that
+    differs from the reference has its C2 bit set. A flagged read whose errors lie
+    partly outside its pointers counts as missed. So does a reference that is itself
+    wrong (e.g. the only clean read): correctly flagged reads then differ from it at
+    bytes they did not flag, which exposes it.
+    """
+    flagged = [any(c) for c in pointers]
+    clean = [v for v, f in zip(versions, flagged, strict=True) if not f]
+    if not clean:
+        return None  # never read without a flag: nothing to compare against
+    reference, _ = Counter(clean).most_common(1)[0]
+    ref = np.frombuffer(reference, dtype=np.uint8)
+    errors = missed = false_flags = 0
+    for v, c, f in zip(versions, pointers, flagged, strict=True):
+        diff = np.frombuffer(v, dtype=np.uint8) != ref
+        if not diff.any():
+            false_flags += f
+            continue
+        errors += 1
+        bits = np.unpackbits(np.frombuffer(c, dtype=np.uint8)).astype(np.bool_)
+        missed += bool((diff & ~bits).any())
+    return errors, missed, false_flags
 
 
 def _relative_shift(ref: U32Array, other: U32Array, base: int, max_shift: int) -> int | None:

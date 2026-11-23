@@ -11,7 +11,8 @@ the drive behaviours the engine has to cope with:
   ``fua_flushes=False`` models drives that accept FUA but ignore it,
 * **errors**: random transient errors, weak sectors (wrong with some probability),
   bad sectors (always wrong, differently every time) and unreadable sectors
-  (MEDIUM ERROR),
+  (MEDIUM ERROR). With ``repeatable_errors`` a wrong sector comes back wrong the
+  same way every time, like a real drive's error concealment (seen on the GP75N),
 * **C2 pointers** that are absent, accurate, or lie (miss errors / flag good data),
 * error rates that drop at lower read speeds.
 
@@ -115,6 +116,7 @@ class VirtualDrive:
         weak: dict[int, float] | None = None,
         bad: set[int] | frozenset[int] = frozenset(),
         unreadable: set[int] | frozenset[int] = frozenset(),
+        repeatable_errors: bool = False,
         c2: C2Mode = C2Mode.ACCURATE,
         c2_miss_rate: float = 0.0,
         c2_false_rate: float = 0.0,
@@ -141,6 +143,8 @@ class VirtualDrive:
         self.weak = dict(weak or {})
         self.bad = frozenset(bad)
         self.unreadable = frozenset(unreadable)
+        self.repeatable_errors = repeatable_errors
+        self._seed = seed
         self.c2_mode = c2
         self.c2_miss_rate = c2_miss_rate
         self.c2_false_rate = c2_false_rate
@@ -274,7 +278,7 @@ class VirtualDrive:
             b = min((k + 1) * SAMPLES_PER_SECTOR, first + n) - first
             corrupted = p > 0 and self._rng.random() < p
             if corrupted:
-                self._corrupt(samples, c2, a, b)
+                self._corrupt(samples, c2, a, b, k=k, s0=k * SAMPLES_PER_SECTOR - first)
             elif self.c2_mode is C2Mode.LYING and self._rng.random() < self.c2_false_rate:
                 pos = int(self._rng.integers(a, b)) * BYTES_PER_SAMPLE
                 c2[pos : pos + BYTES_PER_SAMPLE] = True
@@ -282,9 +286,23 @@ class VirtualDrive:
         self._cache = seg if self.cache_sectors else None
         return seg
 
-    def _corrupt(self, samples: U32Array, c2: BoolArray, a: int, b: int) -> None:
-        hits = self._rng.integers(a, b, size=int(self._rng.integers(1, 9)))
-        noise = self._rng.integers(1, 2**32, size=len(hits), dtype=np.uint64).astype(np.uint32)
+    def _corrupt(
+        self, samples: U32Array, c2: BoolArray, a: int, b: int, *, k: int, s0: int
+    ) -> None:
+        """Damage samples [a, b) of this read, which belong to disc sector ``k``; the
+        sector starts at index ``s0`` of this read (negative if it began earlier)."""
+        if self.repeatable_errors:
+            # The damage depends only on the disc sector, so every wrong read of it is
+            # wrong in the same way, like a real drive's error concealment.
+            rng = np.random.default_rng((self._seed, k % 2**32))
+            hits = s0 + rng.integers(0, SAMPLES_PER_SECTOR, size=int(rng.integers(1, 9)))
+            noise = rng.integers(1, 2**32, size=len(hits), dtype=np.uint64).astype(np.uint32)
+            keep = (hits >= a) & (hits < b)
+            hits, noise = hits[keep], noise[keep]
+        else:
+            hits = self._rng.integers(a, b, size=int(self._rng.integers(1, 9)))
+            noise = self._rng.integers(1, 2**32, size=len(hits), dtype=np.uint64)
+            noise = noise.astype(np.uint32)
         samples[hits] ^= noise
         flag = not (self.c2_mode is C2Mode.LYING and self._rng.random() < self.c2_miss_rate)
         if flag:
