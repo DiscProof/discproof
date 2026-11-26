@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from perfect_audio_copy.drive.constants import SAMPLES_PER_SECTOR, SECTOR_SIZE
-from perfect_audio_copy.drive.toc import Toc
-from perfect_audio_copy.engine.virtual import VirtualDrive, make_toc
+from discproof.drive.constants import SAMPLES_PER_SECTOR, SECTOR_SIZE
+from discproof.drive.toc import Toc
+from discproof.engine.virtual import VirtualDrive, make_toc
 
 LENGTHS = [300, 250, 400]
 

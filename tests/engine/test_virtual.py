@@ -9,10 +9,10 @@ import numpy as np
 import pytest
 from discs import drive, noise_disc
 
-from perfect_audio_copy.drive.constants import SAMPLES_PER_SECTOR, SECTOR_SIZE
-from perfect_audio_copy.drive.sense import IllegalRequestError, MediumError
-from perfect_audio_copy.drive.subchannel import QPosition, parse_q
-from perfect_audio_copy.engine.virtual import C2Mode, VirtualDrive, load_wav, make_toc
+from discproof.drive.constants import SAMPLES_PER_SECTOR, SECTOR_SIZE
+from discproof.drive.sense import IllegalRequestError, MediumError
+from discproof.drive.subchannel import QPosition, parse_q
+from discproof.engine.virtual import C2Mode, VirtualDrive, load_wav, make_toc
 
 
 def test_clean_read_returns_disc_audio() -> None:

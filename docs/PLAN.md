@@ -1,7 +1,7 @@
-# Perfect Audio Copy — Project Plan
+# DiscProof — Project Plan
 
 ## Context
-The user wants a modern Linux (Fedora KDE) desktop app, **Perfect Audio Copy (PAC)**, for bit-exact secure ripping of audio CDs to FLAC, with internet metadata and cover art, a verifiable rip log, and output that Plex reads cleanly. This document is the project plan. The companion [BUILD_PROMPT.md](BUILD_PROMPT.md) is a self-contained prompt that a coding agent can follow to build the app phase by phase.
+The user wants a modern Linux (Fedora KDE) desktop app, **DiscProof**, for bit-exact secure ripping of audio CDs to FLAC, with internet metadata and cover art, a verifiable rip log, and output that Plex reads cleanly. This document is the project plan. The companion [BUILD_PROMPT.md](BUILD_PROMPT.md) is a self-contained prompt that a coding agent can follow to build the app phase by phase.
 
 Decisions confirmed with the user:
 - Stack: **Python 3.12+ / PySide6 (Qt 6) / QML**, styled to feel native on KDE Plasma.
@@ -12,7 +12,7 @@ Decisions confirmed with the user:
 
 ## Architecture summary
 ```
-perfect_audio_copy/
+discproof/
   drive/      SG_IO MMC transport (ctypes ioctl), INQUIRY, READ TOC (fmt 0/2/5 CD-Text),
               READ CD 0xBE (+C2, +subchannel Q), READ SUB-CHANNEL (ISRC/MCN), SET CD SPEED,
               cache defeat (FUA READ(12) / overread), udev disc-insert watcher (pyudev)

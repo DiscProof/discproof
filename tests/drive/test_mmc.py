@@ -7,7 +7,7 @@ import struct
 import pytest
 from fakes import inquiry_data, mode_page_2a, subchannel_isrc, subchannel_mcn
 
-from perfect_audio_copy.drive import mmc
+from discproof.drive import mmc
 
 
 class TestCdbs:

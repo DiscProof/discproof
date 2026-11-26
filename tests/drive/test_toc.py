@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from fakes import basic_toc, full_toc
 
-from perfect_audio_copy.drive.constants import SESSION_GAP
-from perfect_audio_copy.drive.toc import Toc, TocError, Track, parse_basic_toc, parse_full_toc
+from discproof.drive.constants import SESSION_GAP
+from discproof.drive.toc import Toc, TocError, Track, parse_basic_toc, parse_full_toc
 
 # The 6-track disc from the MusicBrainz disc ID documentation, offsets incl. 150 pre-gap:
 # 1 6 242457 150 44942 61305 72755 96360 130485

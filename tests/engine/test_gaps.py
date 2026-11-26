@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 from discs import drive, noise_disc
 
-from perfect_audio_copy.drive.constants import SECTOR_SIZE
-from perfect_audio_copy.engine.gaps import TOLERANCE, GapDetector
-from perfect_audio_copy.engine.virtual import make_toc
+from discproof.drive.constants import SECTOR_SIZE
+from discproof.engine.gaps import TOLERANCE, GapDetector
+from discproof.engine.virtual import make_toc
 
 LENGTHS = [900, 700, 800, 600, 1200]
 PREGAPS = {2: 150, 3: 0, 4: 37, 5: 500}

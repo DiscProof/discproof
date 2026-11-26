@@ -7,9 +7,9 @@ import zlib
 import pytest
 from discs import drive, expected_tracks, noise_disc
 
-from perfect_audio_copy.drive.constants import SECTOR_SIZE
-from perfect_audio_copy.drive.toc import Toc
-from perfect_audio_copy.engine.events import (
+from discproof.drive.constants import SECTOR_SIZE
+from discproof.drive.toc import Toc
+from discproof.engine.events import (
     BlockDone,
     Event,
     Progress,
@@ -20,15 +20,15 @@ from perfect_audio_copy.engine.events import (
     SuspiciousPosition,
     TrackDone,
 )
-from perfect_audio_copy.engine.extract import Extractor, detect_htoa
-from perfect_audio_copy.engine.profile import (
+from discproof.engine.extract import Extractor, detect_htoa
+from discproof.engine.profile import (
     CacheDefeat,
     DriveProfile,
     ExtractionSettings,
     Mode,
     Quality,
 )
-from perfect_audio_copy.engine.virtual import C2Mode, VirtualDrive
+from discproof.engine.virtual import C2Mode, VirtualDrive
 
 NO_CACHE = DriveProfile(caches_audio=False)
 
@@ -403,7 +403,7 @@ def test_cancel_stops_the_rip() -> None:
 
 
 def test_data_track_is_never_read() -> None:
-    from perfect_audio_copy.engine.virtual import make_toc
+    from discproof.engine.virtual import make_toc
 
     audio, _ = noise_disc()
     toc = make_toc([300, 250, 400], data_track=3)

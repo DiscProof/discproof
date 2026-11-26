@@ -8,8 +8,8 @@ import httpx
 import pytest
 from mockweb import MockWeb
 
-from perfect_audio_copy import PROJECT_URL
-from perfect_audio_copy.metadata.web import (
+from discproof import PROJECT_URL
+from discproof.metadata.web import (
     NOT_FOUND_MAX_AGE,
     USER_AGENT,
     RateLimiter,
@@ -20,7 +20,7 @@ from perfect_audio_copy.metadata.web import (
 
 
 def test_user_agent_names_app_and_contact_but_no_email() -> None:
-    assert USER_AGENT.startswith("PerfectAudioCopy/")
+    assert USER_AGENT.startswith("DiscProof/")
     assert USER_AGENT.endswith(f"( {PROJECT_URL} )")
     assert "@" not in USER_AGENT
 

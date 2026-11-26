@@ -12,20 +12,20 @@ from discs import drive, expected_tracks, noise_disc
 from mutagen.flac import FLAC
 from PIL import Image
 
-from perfect_audio_copy.drive.device import DiscInfo
-from perfect_audio_copy.engine.extract import Extractor
-from perfect_audio_copy.engine.profile import DriveProfile, ExtractionSettings
-from perfect_audio_copy.metadata.coverart import prepare_cover
-from perfect_audio_copy.metadata.model import ReleaseMeta, Source, TrackMeta
-from perfect_audio_copy.output import album as album_mod
-from perfect_audio_copy.output.album import (
+from discproof.drive.device import DiscInfo
+from discproof.engine.extract import Extractor
+from discproof.engine.profile import DriveProfile, ExtractionSettings
+from discproof.metadata.coverart import prepare_cover
+from discproof.metadata.model import ReleaseMeta, Source, TrackMeta
+from discproof.output import album as album_mod
+from discproof.output.album import (
     AlbumWriter,
     ExistingPolicy,
     OutputSettings,
     folder_conflict,
 )
-from perfect_audio_copy.output.log import verify_log
-from perfect_audio_copy.verify.accuraterip import ArEntry, ArResponse, ar_checksums, ar_disc_id
+from discproof.output.log import verify_log
+from discproof.verify.accuraterip import ArEntry, ArResponse, ar_checksums, ar_disc_id
 
 LENGTHS = [120, 90, 100]
 
@@ -116,7 +116,7 @@ def test_full_album(tmp_path: Path) -> None:
     for n, path in out.tracks.items():
         assert decode(path) == expected[n], f"track {n} not bit-identical"
         tags = FLAC(str(path))
-        assert tags["COMMENT"] == ["Ripped with Perfect Audio Copy, AccurateRip confidence 7"]
+        assert tags["COMMENT"] == ["Ripped with DiscProof, AccurateRip confidence 7"]
         assert "REPLAYGAIN_ALBUM_GAIN" in tags and tags.pictures
     with Image.open(out.cover) as im:
         assert im.size == (1500, 1500)
@@ -135,7 +135,7 @@ def test_not_in_database(tmp_path: Path) -> None:
     log = out.log.read_text()
     assert "None of the tracks are present in the AccurateRip database" in log
     tags = FLAC(str(out.tracks[1]))
-    assert tags["COMMENT"] == ["Ripped with Perfect Audio Copy, not in AccurateRip database"]
+    assert tags["COMMENT"] == ["Ripped with DiscProof, not in AccurateRip database"]
 
 
 @pytest.mark.parametrize("policy", list(ExistingPolicy))
@@ -226,7 +226,7 @@ def test_multi_disc_set_uses_a_folder_per_disc(tmp_path: Path) -> None:
     album = tmp_path / "Music" / "Test Artist" / "Broadcasts Vol. 3 (2001)"
     one = rip_disc(tmp_path, 1)
     two_disc_settings = OutputSettings(tmp_path / "Music")
-    from perfect_audio_copy.engine.virtual import make_toc
+    from discproof.engine.virtual import make_toc
 
     assert folder_conflict(two_disc_settings, two_disc_release(make_toc(LENGTHS), 2)) is None
     two = rip_disc(tmp_path, 2)

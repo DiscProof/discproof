@@ -10,9 +10,9 @@ from collections.abc import Iterator
 
 import pytest
 
-from perfect_audio_copy.drive.constants import SECTOR_SIZE
-from perfect_audio_copy.drive.device import Drive
-from perfect_audio_copy.drive.subchannel import QPosition, parse_q
+from discproof.drive.constants import SECTOR_SIZE
+from discproof.drive.device import Drive
+from discproof.drive.subchannel import QPosition, parse_q
 
 pytestmark = pytest.mark.hardware
 
@@ -68,7 +68,7 @@ def test_c2_and_q_layout(drive: Drive) -> None:
 def test_secure_rip_is_repeatable(drive: Drive) -> None:
     """Secure-rip the shortest audio track twice; the CRCs must match. Uses the
     conservative default profile (cache assumed, defeated by seeking away)."""
-    from perfect_audio_copy.engine import DriveProfile, ExtractionSettings, Extractor, Quality
+    from discproof.engine import DriveProfile, ExtractionSettings, Extractor, Quality
 
     toc = drive.read_toc()
     shortest = min(toc.audio_tracks, key=lambda t: toc.length(t.number))
@@ -82,7 +82,7 @@ def test_secure_rip_is_repeatable(drive: Drive) -> None:
 def test_gap_detection_matches_brute_force(drive: Drive) -> None:
     """Every pre-gap is confirmed, and at three tracks the boundary found by the
     search equals the one found by reading Q at every sector around it."""
-    from perfect_audio_copy.engine.gaps import GapDetector
+    from discproof.engine.gaps import GapDetector
 
     toc = drive.read_toc()
     found = GapDetector(drive, toc).detect_all()

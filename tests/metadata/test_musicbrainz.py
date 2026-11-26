@@ -6,8 +6,8 @@ import json
 
 from mockweb import DISC_ID, EXAMPLE_TOC, FIXTURES, RELEASE, MockWeb
 
-from perfect_audio_copy.metadata.model import ReleaseMeta, Source, same_barcode
-from perfect_audio_copy.metadata.musicbrainz import MusicBrainz, parse_releases, preselect
+from discproof.metadata.model import ReleaseMeta, Source, same_barcode
+from discproof.metadata.musicbrainz import MusicBrainz, parse_releases, preselect
 
 
 def load(name: str) -> dict:  # type: ignore[type-arg]

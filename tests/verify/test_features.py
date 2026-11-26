@@ -5,10 +5,10 @@ from __future__ import annotations
 import pytest
 from discs import drive, noise_disc
 
-from perfect_audio_copy.drive.constants import C2_SIZE, SECTOR_SIZE
-from perfect_audio_copy.engine.profile import CacheDefeat, DriveProfile
-from perfect_audio_copy.engine.virtual import C2Mode, VirtualDrive
-from perfect_audio_copy.verify.features import FeatureDetector, _judge_c2
+from discproof.drive.constants import C2_SIZE, SECTOR_SIZE
+from discproof.engine.profile import CacheDefeat, DriveProfile
+from discproof.engine.virtual import C2Mode, VirtualDrive
+from discproof.verify.features import FeatureDetector, _judge_c2
 
 
 def detector(d: VirtualDrive) -> FeatureDetector:
@@ -162,7 +162,7 @@ def test_detected_profile_rips_correctly(cache: int) -> None:
     """End to end: detect features, then a secure rip with the result is exact."""
     from discs import expected_tracks
 
-    from perfect_audio_copy.engine.extract import Extractor
+    from discproof.engine.extract import Extractor
 
     audio, toc = noise_disc()
 

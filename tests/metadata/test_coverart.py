@@ -9,7 +9,7 @@ import pytest
 from mockweb import FIXTURES, RELEASE, png
 from PIL import Image
 
-from perfect_audio_copy.metadata.coverart import CoverError, caa_front_url, prepare_cover
+from discproof.metadata.coverart import CoverError, caa_front_url, prepare_cover
 
 
 def size(jpeg: bytes) -> tuple[int, int]:

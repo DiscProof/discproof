@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from mockweb import DISC_ID, EXAMPLE_TOC
 
-from perfect_audio_copy.drive.constants import CTRL_DATA
-from perfect_audio_copy.drive.toc import Toc, Track
-from perfect_audio_copy.metadata.discid import mb_disc_id, mb_submit_url, mb_toc_string
+from discproof.drive.constants import CTRL_DATA
+from discproof.drive.toc import Toc, Track
+from discproof.metadata.discid import mb_disc_id, mb_submit_url, mb_toc_string
 
 
 def test_documented_example() -> None:

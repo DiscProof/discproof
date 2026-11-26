@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from perfect_audio_copy.drive import sense as s
-from perfect_audio_copy.drive.crc import cd_crc16, crc16_ccitt
-from perfect_audio_copy.drive.msf import (
+from discproof.drive import sense as s
+from discproof.drive.crc import cd_crc16, crc16_ccitt
+from discproof.drive.msf import (
     bcd_to_int,
     frames_to_timestamp,
     int_to_bcd,

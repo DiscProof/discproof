@@ -6,10 +6,10 @@ import struct
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 
-from perfect_audio_copy.drive.constants import C2_SIZE, SECTOR_SIZE, SUBQ_SIZE
-from perfect_audio_copy.drive.crc import cd_crc16
-from perfect_audio_copy.drive.msf import int_to_bcd, lba_to_msf
-from perfect_audio_copy.drive.transport import BaseTransport, RawResult
+from discproof.drive.constants import C2_SIZE, SECTOR_SIZE, SUBQ_SIZE
+from discproof.drive.crc import cd_crc16
+from discproof.drive.msf import int_to_bcd, lba_to_msf
+from discproof.drive.transport import BaseTransport, RawResult
 
 Handler = Callable[[bytes, int], RawResult | bytes]
 

@@ -10,9 +10,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from perfect_audio_copy.drive.constants import CTRL_DATA
-from perfect_audio_copy.drive.toc import Toc, Track
-from perfect_audio_copy.verify.accuraterip import (
+from discproof.drive.constants import CTRL_DATA
+from discproof.drive.toc import Toc, Track
+from discproof.verify.accuraterip import (
     ArChecksums,
     ArDiscId,
     ArEntry,

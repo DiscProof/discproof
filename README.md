@@ -1,4 +1,6 @@
-# Perfect Audio Copy
+# DiscProof
+
+*Rip it right.* (Formerly Perfect Audio Copy.)
 
 Secure, verified audio CD ripping to FLAC for the Linux desktop (Fedora KDE Plasma first).
 It is inspired by Exact Audio Copy: it re-reads and compares sectors, corrects the drive's read offset, verifies rips against AccurateRip, looks up metadata on MusicBrainz and Discogs, and writes Plex-ready album folders.
@@ -7,6 +9,11 @@ It is inspired by Exact Audio Copy: it re-reads and compares sectors, corrects t
 
 Source and issues: https://github.com/perfectaudiocopy/perfect-audio-copy
 
+Upgrading from Perfect Audio Copy: the `discproof` RPM replaces the `perfect-audio-copy` package, and on
+first start the app moves `~/.config`, `~/.local/share` and `~/.cache/perfect-audio-copy` to `discproof`
+(only when the new folder doesn't exist yet). The commands are now `discproof`, `discproof-probe` and
+`discproof-drivecheck`.
+
 ## Install
 
 ### Fedora RPM
@@ -14,7 +21,7 @@ Source and issues: https://github.com/perfectaudiocopy/perfect-audio-copy
 ```bash
 sudo dnf install rpm-build pyproject-rpm-macros python3-devel
 scripts/build-rpm.sh
-sudo dnf install dist/rpm/RPMS/noarch/perfect-audio-copy-*.noarch.rpm
+sudo dnf install dist/rpm/RPMS/noarch/discproof-*.noarch.rpm
 ```
 
 The first builds usually stop with "Missing build dependencies": the dependencies are worked out from `pyproject.toml` during the build, first the build tools, then (because the build runs the tests) the app's own dependencies. Each time, run the `sudo dnf builddep …` command it prints, then `scripts/build-rpm.sh` again; expect this twice on a fresh system.
@@ -25,11 +32,11 @@ This installs the app system-wide, with its menu entry, icon and the Plasma "aud
 
 ```bash
 sudo dnf install python3-pyside6 flac
-pipx install --system-site-packages /path/to/perfect-audio-copy
-perfect-audio-copy --install-desktop      # add it to the application menu
+pipx install --system-site-packages /path/to/discproof
+discproof --install-desktop      # add it to the application menu
 ```
 
-`--system-site-packages` lets it use Fedora's PySide6. With `uv` (which can't see system packages), install the Qt wheel instead: `uv tool install "/path/to/perfect-audio-copy[qt-wheel]"`. The UI draws its own theme, so it looks the same either way. `perfect-audio-copy --uninstall-desktop` removes the menu entry again.
+`--system-site-packages` lets it use Fedora's PySide6. With `uv` (which can't see system packages), install the Qt wheel instead: `uv tool install "/path/to/discproof[qt-wheel]"`. The UI draws its own theme, so it looks the same either way. `discproof --uninstall-desktop` removes the menu entry again.
 
 ## First run
 
@@ -49,7 +56,7 @@ perfect-audio-copy --install-desktop      # add it to the application menu
 
    Before reading audio, the app detects each track's pre-gap for the CUE sheet and the log. This can be turned off in Settings.
 
-Try everything without a CD: `perfect-audio-copy --demo` runs the real UI against a simulated disc, offline.
+Try everything without a CD: `discproof --demo` runs the real UI against a simulated disc, offline.
 
 ## Output and Plex
 
@@ -75,8 +82,8 @@ If only read access is available, ripping still works, but drive speed control i
 ## Tools
 
 ```bash
-perfect-audio-copy-probe /dev/sr0 --read-test   # drive capabilities, TOC, CD-Text, ISRC/MCN, test read
-perfect-audio-copy-drivecheck --save            # drive setup from the command line
+discproof-probe /dev/sr0 --read-test   # drive capabilities, TOC, CD-Text, ISRC/MCN, test read
+discproof-drivecheck --save            # drive setup from the command line
 ```
 
 ## Development (Fedora)
@@ -88,7 +95,7 @@ The UI uses its own dark theme (shared with the portfolio-tracker project, see [
 sudo dnf install python3-pyside6 python3-pillow flac uv
 uv venv --system-site-packages .venv
 uv pip install -e . --group dev        # or: .venv/bin/pip install -e . --group dev
-.venv/bin/perfect-audio-copy           # or: --demo
+.venv/bin/discproof           # or: --demo
 scripts/ci.sh                          # ruff, mypy (strict on core), pytest
 ```
 

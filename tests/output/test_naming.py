@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from perfect_audio_copy.output.naming import (
+from discproof.output.naming import (
     DEFAULT_TEMPLATE,
     TemplateError,
     render,

@@ -8,8 +8,8 @@ from pathlib import Path
 import httpx
 import pytest
 
-from perfect_audio_copy.verify.accuraterip import ArDiscId, ArEntry, ArResponse, build_ar_bin
-from perfect_audio_copy.verify.online import AccurateRipClient, OnlineError, drive_offset_list
+from discproof.verify.accuraterip import ArDiscId, ArEntry, ArResponse, build_ar_bin
+from discproof.verify.online import AccurateRipClient, OnlineError, drive_offset_list
 
 FIXTURE = Path(__file__).parent / "fixtures" / "driveoffsets.htm"
 DISC = ArDiscId(2, 0xF21C, 0x27EF8, 0x05021002)
@@ -29,11 +29,11 @@ BIN = build_ar_bin(
 def client(handler, calls: list[str]) -> httpx.Client:  # type: ignore[no-untyped-def]
     def wrapped(request: httpx.Request) -> httpx.Response:
         calls.append(str(request.url))
-        assert request.headers["User-Agent"].startswith("PerfectAudioCopy/")
+        assert request.headers["User-Agent"].startswith("DiscProof/")
         return handler(request)
 
     return httpx.Client(
-        transport=httpx.MockTransport(wrapped), headers={"User-Agent": "PerfectAudioCopy/test"}
+        transport=httpx.MockTransport(wrapped), headers={"User-Agent": "DiscProof/test"}
     )
 
 

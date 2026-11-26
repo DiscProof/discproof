@@ -1,9 +1,9 @@
-# Perfect Audio Copy — Build Prompt
+# DiscProof — Build Prompt
 
-You are building **Perfect Audio Copy (PAC)**, a Linux desktop application for Fedora KDE Plasma that makes bit-exact, verified copies of audio CDs into FLAC. It uses the well-established secure-ripping approach: repeated reads, read-offset correction and AccurateRip verification. Work in phases, keep the test suite green at every step, and commit after each phase.
+You are building **DiscProof**, a Linux desktop application for Fedora KDE Plasma that makes bit-exact, verified copies of audio CDs into FLAC. It uses the well-established secure-ripping approach: repeated reads, read-offset correction and AccurateRip verification. Work in phases, keep the test suite green at every step, and commit after each phase.
 
 ### Product goal
-Insert a CD, and PAC identifies it online, shows album info and cover art, rips every track securely, and verifies the result against AccurateRip. It then writes one folder per album:
+Insert a CD, and DiscProof identifies it online, shows album info and cover art, rips every track securely, and verifies the result against AccurateRip. It then writes one folder per album:
 ```
 <Library>/<AlbumArtist>/<Album> (<Year>)/
     01 - <Title>.flac ...      (multi-disc: "1-01 - <Title>.flac", DISCNUMBER tag set)
@@ -17,7 +17,7 @@ The naming template is configurable (default `{albumartist}/{album} ({year})/{di
 - Python ≥ 3.12, managed with `uv`. PySide6 (Qt 6) with a **QML** UI (Qt Quick Controls 2 using the `org.kde.desktop` style when available, falling back to Fusion; use Kirigami components if `org.kde.kirigami` is importable). Follow the Plasma light/dark color scheme.
 - Drive access: our own **SG_IO** MMC transport in pure Python (`fcntl.ioctl` + `ctypes` `sg_io_hdr`) on `/dev/sr*`, opened `O_RDONLY|O_NONBLOCK` (use O_RDWR if needed; Fedora's logind `uaccess` ACL gives the desktop user access). Use NumPy for sector comparison. Do **not** depend on cdparanoia for the secure engine; you may offer it as a fallback for drives that reject READ CD.
 - Encoding: the reference `flac` CLI (`-8 --verify`), run in parallel across CPU cores while ripping continues. Tags with `mutagen`. ReplayGain with `metaflac --add-replay-gain` (album + track).
-- Networking: `httpx`. Disc-insert detection: `pyudev`. Config: TOML in `~/.config/perfect-audio-copy/`; cache/DB in `~/.local/share/perfect-audio-copy/`.
+- Networking: `httpx`. Disc-insert detection: `pyudev`. Config: TOML in `~/.config/discproof/`; cache/DB in `~/.local/share/discproof/`.
 - Tooling: `ruff`, `mypy --strict` on core packages, `pytest`. Fedora runtime deps: `flac`, `python3-pyside6` or the PySide6 wheel, `kf6-kirigami` (optional).
 
 ### Module layout
@@ -58,14 +58,14 @@ Extraction modes:
 ### Phase 4: Metadata (`metadata/`)
 - Compute the **MusicBrainz disc ID** from the TOC (SHA-1 of the formatted TOC, MB's Base64 variant). Validate it against the libdiscid test vector. Look up `https://musicbrainz.org/ws/2/discid/{id}?inc=artists+recordings+release-groups+labels+isrcs&fmt=json`, falling back to a TOC fuzzy lookup.
   - Respect a rate limit of 1 request per second.
-  - Send the User-Agent `PerfectAudioCopy/<version> ( <project url> )`. Do not put the user's email in it.
+  - Send the User-Agent `DiscProof/<version> ( <project url> )`. Do not put the user's email in it.
 - When several releases match, show a chooser with country, date, label, catalog number, barcode, and format, and preselect a release whose barcode matches the disc's MCN.
 - **Cover Art Archive**: front image for the release (falling back to the release-group). Prefer the 1200 px thumbnail or the original; convert to JPEG if needed; cap at 1500 px for `cover.jpg`; embed a ≤ 1000 px copy as a FLAC PICTURE block (type 3).
 - **Discogs** fallback (the user supplies a personal token in Settings): search by barcode, then by artist + album + track count. Use Discogs images when CAA has none.
 - Use CD-Text as a last resort, and always allow manual editing of every field in the UI. Cache lookups in SQLite, keyed by disc ID.
 
 ### Phase 5: Output (`output/`)
-- **Tags** (Vorbis comments, Plex/MusicBrainz Picard compatible): TITLE, ARTIST, ALBUMARTIST, ALBUM, TRACKNUMBER, TRACKTOTAL, DISCNUMBER, DISCTOTAL, DATE, ORIGINALDATE, GENRE, LABEL, CATALOGNUMBER, BARCODE, ISRC, MEDIA=CD, MUSICBRAINZ_ALBUMID, MUSICBRAINZ_ARTISTID, MUSICBRAINZ_ALBUMARTISTID, MUSICBRAINZ_TRACKID, MUSICBRAINZ_RELEASEGROUPID, MUSICBRAINZ_DISCID, COMMENT (`Ripped with Perfect Audio Copy, AccurateRip confidence N`), REPLAYGAIN_* (via metaflac).
+- **Tags** (Vorbis comments, Plex/MusicBrainz Picard compatible): TITLE, ARTIST, ALBUMARTIST, ALBUM, TRACKNUMBER, TRACKTOTAL, DISCNUMBER, DISCTOTAL, DATE, ORIGINALDATE, GENRE, LABEL, CATALOGNUMBER, BARCODE, ISRC, MEDIA=CD, MUSICBRAINZ_ALBUMID, MUSICBRAINZ_ARTISTID, MUSICBRAINZ_ALBUMARTISTID, MUSICBRAINZ_TRACKID, MUSICBRAINZ_RELEASEGROUPID, MUSICBRAINZ_DISCID, COMMENT (`Ripped with DiscProof, AccurateRip confidence N`), REPLAYGAIN_* (via metaflac).
 - **Encoding pipeline**: write each track to a temp WAV/PCM, run `flac -8 --verify`, write tags and the picture, move the file into place atomically, and delete the temp file. Encode in parallel with extraction.
 - **CUE sheet**: CATALOG, per-track ISRC, TITLE/PERFORMER, FLAGS PRE/DCP, INDEX 00/01 laid out as "gaps appended to previous track" over the separate FLAC files.
 - **Log**: EAC-like and plain text. Include:

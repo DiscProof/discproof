@@ -9,9 +9,9 @@ import numpy as np
 import pytest
 from mutagen.flac import FLAC
 
-from perfect_audio_copy.metadata.coverart import prepare_cover
-from perfect_audio_copy.metadata.model import ReleaseMeta, Source, TrackMeta
-from perfect_audio_copy.output.encoder import (
+from discproof.metadata.coverart import prepare_cover
+from discproof.metadata.model import ReleaseMeta, Source, TrackMeta
+from discproof.output.encoder import (
     PARTIAL_SUFFIX,
     EncodeError,
     EncodeJob,
@@ -19,7 +19,7 @@ from perfect_audio_copy.output.encoder import (
     add_replaygain,
     encode,
 )
-from perfect_audio_copy.output.tags import build_tags, write_tags
+from discproof.output.tags import build_tags, write_tags
 
 
 def noise(seconds: float, seed: int = 0) -> bytes:
@@ -78,7 +78,7 @@ def test_encode_is_bit_exact_and_tagged(tmp_path: Path) -> None:
     assert decode(out.path) == pcm
     f = FLAC(str(out.path))
     assert f["TITLE"] == ["Slate"] and f["TRACKNUMBER"] == ["1"] and f["TRACKTOTAL"] == ["1"]
-    assert f["COMMENT"] == ["Ripped with Perfect Audio Copy, AccurateRip confidence 12"]
+    assert f["COMMENT"] == ["Ripped with DiscProof, AccurateRip confidence 12"]
     assert f["MUSICBRAINZ_TRACKID"] == ["rec-1"]  # Picard: recording MBID
     assert f["MUSICBRAINZ_RELEASETRACKID"] == ["trk-1"]
     assert f["MUSICBRAINZ_DISCID"] == ["DISC"] and f["ISRC"] == ["USRE10100695"]
@@ -92,10 +92,10 @@ def test_tag_mapping_variants() -> None:
     tags = build_tags(discogs, discogs.tracks[0], ar_in_database=False)
     assert tags["DISCOGS_RELEASE_ID"] == ["42"] and "MUSICBRAINZ_ALBUMID" not in tags
     assert tags["ARTIST"] == ["Y"]  # falls back to the album artist
-    assert tags["COMMENT"] == ["Ripped with Perfect Audio Copy, not in AccurateRip database"]
+    assert tags["COMMENT"] == ["Ripped with DiscProof, not in AccurateRip database"]
     htoa = build_tags(MB, TrackMeta(0, "", ""))
     assert htoa["TITLE"] == ["Hidden Track"] and htoa["TRACKNUMBER"] == ["0"]
-    assert build_tags(MB, MB.tracks[0])["COMMENT"] == ["Ripped with Perfect Audio Copy"]
+    assert build_tags(MB, MB.tracks[0])["COMMENT"] == ["Ripped with DiscProof"]
 
 
 def test_rewriting_tags_replaces_everything(tmp_path: Path) -> None:
