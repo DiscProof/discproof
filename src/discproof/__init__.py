@@ -7,7 +7,7 @@ APP_ID = "io.github.discproof.DiscProof"
 APP_SLUG = "discproof"
 #: Project home; also the contact URL sent to web services (MusicBrainz requires one
 #: in the User-Agent).
-PROJECT_URL = "https://github.com/perfectaudiocopy/perfect-audio-copy"
+PROJECT_URL = "https://github.com/DiscProof/discproof"
 
 try:
     __version__ = version("discproof")

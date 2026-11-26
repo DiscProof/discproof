@@ -9,7 +9,7 @@ Summary:        Secure, verified audio CD ripping to FLAC
 # The app is GPL-3.0-or-later; the bundled Inter and JetBrains Mono fonts are
 # OFL-1.1 and the bundled Lucide icons are ISC.
 License:        GPL-3.0-or-later AND OFL-1.1 AND ISC
-URL:            https://github.com/perfectaudiocopy/perfect-audio-copy
+URL:            https://github.com/DiscProof/discproof
 Source0:        %{name}-%{version}.tar.gz
 
 BuildArch:      noarch
