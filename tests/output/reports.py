@@ -5,14 +5,14 @@ from __future__ import annotations
 import datetime as dt
 from dataclasses import replace
 
-from perfect_audio_copy.drive.constants import CTRL_COPY_PERMITTED, CTRL_PREEMPHASIS
-from perfect_audio_copy.drive.toc import Toc, Track
-from perfect_audio_copy.engine.events import TrackResult
-from perfect_audio_copy.engine.profile import DriveProfile, ExtractionSettings, Quality
-from perfect_audio_copy.metadata.model import ReleaseMeta, Source, TrackMeta
-from perfect_audio_copy.output.report import AlbumReport, TrackReport
-from perfect_audio_copy.verify.accuraterip import ArChecksums, TrackVerdict
-from perfect_audio_copy.verify.offsets import OffsetMatch
+from discproof.drive.constants import CTRL_COPY_PERMITTED, CTRL_PREEMPHASIS
+from discproof.drive.toc import Toc, Track
+from discproof.engine.events import TrackResult
+from discproof.engine.profile import DriveProfile, ExtractionSettings, Quality
+from discproof.metadata.model import ReleaseMeta, Source, TrackMeta
+from discproof.output.report import AlbumReport, TrackReport
+from discproof.verify.accuraterip import ArChecksums, TrackVerdict
+from discproof.verify.offsets import OffsetMatch
 
 TOC = Toc(
     (

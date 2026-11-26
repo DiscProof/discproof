@@ -1,7 +1,7 @@
 REM GENRE "Alt-Country"
 REM DATE 1993
 REM DISCID 910D690C
-REM COMMENT "Perfect Audio Copy 0.1.0"
+REM COMMENT "DiscProof 0.1.0"
 CATALOG 0075994542423
 PERFORMER "Uncle Tupelo"
 TITLE "Anodyne 'Deluxe'"

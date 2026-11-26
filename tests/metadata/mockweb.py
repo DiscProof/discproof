@@ -9,8 +9,8 @@ from pathlib import Path
 import httpx
 from PIL import Image
 
-from perfect_audio_copy.drive.toc import Toc, Track
-from perfect_audio_copy.metadata.web import ResponseCache, Web
+from discproof.drive.toc import Toc, Track
+from discproof.metadata.web import ResponseCache, Web
 
 FIXTURES = Path(__file__).parent / "fixtures"
 DISC_ID = "49HHV7Eb8UKF3aQiNmu1GR8vKTY-"

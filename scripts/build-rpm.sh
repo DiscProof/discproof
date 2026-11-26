@@ -17,18 +17,18 @@ mkdir -p "$top"/{SOURCES,SPECS}
 if ! git diff --quiet HEAD; then
     echo "warning: uncommitted changes are NOT included (the RPM is built from HEAD)" >&2
 fi
-git archive --format=tar.gz --prefix="perfect-audio-copy-$rpmver/" \
-    -o "$top/SOURCES/perfect-audio-copy-$rpmver.tar.gz" HEAD
+git archive --format=tar.gz --prefix="discproof-$rpmver/" \
+    -o "$top/SOURCES/discproof-$rpmver.tar.gz" HEAD
 # Each build gets a newer Release (build time + commit), so `dnf upgrade` installs
 # it over the previous build and `rpm -q` shows which commit is installed.
 release="1.$(date -u +%Y%m%d.%H%M).g$(git rev-parse --short HEAD)"
 sed -e "s/^Version:.*/Version:        $rpmver/" \
     -e "s/^Release:.*/Release:        $release%{?dist}/" \
-    packaging/perfect-audio-copy.spec > "$top/SPECS/perfect-audio-copy.spec"
+    packaging/discproof.spec > "$top/SPECS/discproof.spec"
 
 rm -f "$top"/SRPMS/*.buildreqs.nosrc.rpm "$top"/RPMS/noarch/*.rpm "$top"/SRPMS/*.src.rpm
 set +e
-rpmbuild --define "_topdir $top" -ba "$top/SPECS/perfect-audio-copy.spec"
+rpmbuild --define "_topdir $top" -ba "$top/SPECS/discproof.spec"
 status=$?
 set -e
 if [ "$status" -eq 11 ]; then

@@ -7,8 +7,8 @@ import json
 import httpx
 from mockweb import FIXTURES, MockWeb
 
-from perfect_audio_copy.metadata.discogs import Discogs, parse_release
-from perfect_audio_copy.metadata.model import Source
+from discproof.metadata.discogs import Discogs, parse_release
+from discproof.metadata.model import Source
 
 
 def release_json() -> dict:  # type: ignore[type-arg]

@@ -13,8 +13,8 @@ pytestmark = pytest.mark.ui
 
 @pytest.fixture
 def backend(qapp: object, tmp_path: Path) -> Any:
-    from perfect_audio_copy.ui.backend.controller import Backend
-    from perfect_audio_copy.ui.backend.demo import demo_backend_kwargs
+    from discproof.ui.backend.controller import Backend
+    from discproof.ui.backend.demo import demo_backend_kwargs
 
     kw = demo_backend_kwargs(speed=0)
     b = Backend(**kw)
@@ -141,7 +141,7 @@ def test_settings_persist(backend: Any) -> None:
     backend.setSetting("no_such_key", 1)
     s = prop(backend, "settings")
     assert s["quality"] == "high"  # the invalid value was replaced by the default
-    from perfect_audio_copy.config.settings import load_settings
+    from discproof.config.settings import load_settings
 
     saved = load_settings(backend._settings_file)
     assert saved.flac_level == 5 and saved.quality == "high"  # "bogus" fell back to default
@@ -164,7 +164,7 @@ def test_release_choice(backend: Any) -> None:
 
 
 def test_drive_wizard_saves_profile(backend: Any) -> None:
-    from perfect_audio_copy.ui.backend.wizard import DriveWizard
+    from discproof.ui.backend.wizard import DriveWizard
 
     w = DriveWizard(backend)
     w.start()
@@ -194,8 +194,8 @@ def test_eject_keeps_results_until_next_disc(backend: Any) -> None:
 
 
 def test_sector_map_widens_single_bad_sector(qapp: object) -> None:
-    from perfect_audio_copy.engine.events import SectorStatus
-    from perfect_audio_copy.ui.backend.images import COLORS, SUSPICIOUS, SectorMaps
+    from discproof.engine.events import SectorStatus
+    from discproof.ui.backend.images import COLORS, SUSPICIOUS, SectorMaps
 
     maps = SectorMaps()
     maps.reset([(1, 0, 10000)])
@@ -211,9 +211,9 @@ def test_sector_map_widens_single_bad_sector(qapp: object) -> None:
 def slow_backend(tmp_path: Path, *, isrcs: dict[int, str], cdtext=None, online: bool = True):  # type: ignore[no-untyped-def]
     import time as _time
 
-    from perfect_audio_copy.metadata.service import LookupResult
-    from perfect_audio_copy.ui.backend.controller import Backend
-    from perfect_audio_copy.ui.backend.demo import demo_backend_kwargs
+    from discproof.metadata.service import LookupResult
+    from discproof.ui.backend.controller import Backend
+    from discproof.ui.backend.demo import demo_backend_kwargs
 
     kw = demo_backend_kwargs(speed=0)
     session = kw["drive_factory"]("x")
@@ -231,7 +231,7 @@ def slow_backend(tmp_path: Path, *, isrcs: dict[int, str], cdtext=None, online: 
     session.read_isrc = read_isrc
     session.read_cdtext = read_cdtext
     if not online:
-        from perfect_audio_copy.metadata.service import blank_release
+        from discproof.metadata.service import blank_release
 
         kw["metadata"].lookup = lambda disc: LookupResult("x", [blank_release(disc.toc)], 0)
         kw["metadata"].cover = lambda release: None
@@ -263,7 +263,7 @@ def test_isrc_probe_stops_when_first_tracks_have_none(qapp: object, tmp_path: Pa
 
 
 def test_late_cdtext_used_when_not_found_online(qapp: object, tmp_path: Path) -> None:
-    from perfect_audio_copy.drive.cdtext import CdText, CdTextEntry
+    from discproof.drive.cdtext import CdText, CdTextEntry
 
     text = CdText(
         album=CdTextEntry(title="From CD-Text", performer="Someone"),
@@ -277,9 +277,9 @@ def test_late_cdtext_used_when_not_found_online(qapp: object, tmp_path: Path) ->
 
 
 def test_unconfigured_drive_uses_drive_list_offset(qapp: object, tmp_path: Path) -> None:
-    from perfect_audio_copy.ui.backend.controller import Backend
-    from perfect_audio_copy.ui.backend.demo import demo_backend_kwargs
-    from perfect_audio_copy.verify.offsets import DriveOffsetEntry
+    from discproof.ui.backend.controller import Backend
+    from discproof.ui.backend.demo import demo_backend_kwargs
+    from discproof.verify.offsets import DriveOffsetEntry
 
     kw = demo_backend_kwargs(speed=0)
     kw["offset_list"] = lambda: [DriveOffsetEntry("DEMO", "Virtual CD-ROM", 6, 99, 100)]
@@ -295,8 +295,8 @@ def test_unconfigured_drive_uses_drive_list_offset(qapp: object, tmp_path: Path)
 def test_cancel_during_gap_detection(qapp: object, tmp_path: Path) -> None:
     import time as _time
 
-    from perfect_audio_copy.ui.backend.controller import Backend
-    from perfect_audio_copy.ui.backend.demo import demo_backend_kwargs
+    from discproof.ui.backend.controller import Backend
+    from discproof.ui.backend.demo import demo_backend_kwargs
 
     kw = demo_backend_kwargs(speed=0)
     session = kw["drive_factory"]("x")
@@ -323,12 +323,12 @@ def test_cancel_during_gap_detection(qapp: object, tmp_path: Path) -> None:
 def test_hidden_track_warning_only_for_real_audio(qapp: object, level: int, warned: bool) -> None:
     import threading
 
-    from perfect_audio_copy.drive.device import DiscInfo
-    from perfect_audio_copy.engine.gaps import GapResult
-    from perfect_audio_copy.engine.profile import ExtractionSettings
-    from perfect_audio_copy.engine.virtual import make_toc
-    from perfect_audio_copy.ui.backend.controller import Backend
-    from perfect_audio_copy.ui.backend.demo import demo_backend_kwargs
+    from discproof.drive.device import DiscInfo
+    from discproof.engine.gaps import GapResult
+    from discproof.engine.profile import ExtractionSettings
+    from discproof.engine.virtual import make_toc
+    from discproof.ui.backend.controller import Backend
+    from discproof.ui.backend.demo import demo_backend_kwargs
 
     b = Backend(**demo_backend_kwargs(speed=0))
     toc = make_toc([300, 300], first_start=40)
@@ -340,7 +340,7 @@ def test_hidden_track_warning_only_for_real_audio(qapp: object, level: int, warn
         def detect(self, n: int) -> GapResult:
             return GapResult(n, 40 if n == 1 else 0, True, level if n == 1 else None)
 
-    import perfect_audio_copy.ui.backend.controller as ctl
+    import discproof.ui.backend.controller as ctl
 
     real = ctl.GapDetector
     ctl.GapDetector = FakeDetector  # type: ignore[misc,assignment]

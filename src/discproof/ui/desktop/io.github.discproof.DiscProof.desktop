@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=DiscProof
+GenericName=Audio CD Ripper
+Comment=Rip audio CDs to FLAC with secure, verified extraction
+Exec=discproof
+Icon=io.github.discproof.DiscProof
+Terminal=false
+Categories=AudioVideo;Audio;DiscBurning;Qt;
+Keywords=cd;rip;ripper;flac;accuraterip;audio;music;musicbrainz;
+StartupNotify=true
+StartupWMClass=discproof
+SingleMainWindow=true

@@ -8,23 +8,23 @@ import numpy as np
 import pytest
 from discs import drive, noise_disc
 
-from perfect_audio_copy.drive.constants import SECTOR_SIZE
-from perfect_audio_copy.drive.toc import Toc
-from perfect_audio_copy.engine.extract import Extractor
-from perfect_audio_copy.engine.profile import DriveProfile
-from perfect_audio_copy.verify.accuraterip import (
+from discproof.drive.constants import SECTOR_SIZE
+from discproof.drive.toc import Toc
+from discproof.engine.extract import Extractor
+from discproof.engine.profile import DriveProfile
+from discproof.verify.accuraterip import (
     ArEntry,
     ArResponse,
     ar_checksums,
     ar_disc_id,
 )
-from perfect_audio_copy.verify.offsets import (
+from discproof.verify.offsets import (
     detected_drive_offset,
     find_drive_offset,
     offset_candidates,
     parse_drive_offsets,
 )
-from perfect_audio_copy.verify.verify import detect_offset_from_disc, offset_test_tracks, verify_rip
+from discproof.verify.verify import detect_offset_from_disc, offset_test_tracks, verify_rip
 
 FIXTURE = Path(__file__).parent / "fixtures" / "driveoffsets.htm"
 LENGTHS = [200, 150, 120, 180, 160]

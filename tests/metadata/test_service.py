@@ -5,10 +5,10 @@ from __future__ import annotations
 import httpx
 from mockweb import DISC_ID, EXAMPLE_TOC, RELEASE, MockWeb, png
 
-from perfect_audio_copy.drive.cdtext import CdText, CdTextEntry
-from perfect_audio_copy.drive.device import DiscInfo
-from perfect_audio_copy.metadata.model import ReleaseMeta, Source, TrackMeta
-from perfect_audio_copy.metadata.service import MetadataService
+from discproof.drive.cdtext import CdText, CdTextEntry
+from discproof.drive.device import DiscInfo
+from discproof.metadata.model import ReleaseMeta, Source, TrackMeta
+from discproof.metadata.service import MetadataService
 
 
 def service(*routes, **kw) -> tuple[MetadataService, MockWeb]:  # type: ignore[no-untyped-def]

@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from perfect_audio_copy.drive.enumerate import list_drives, max_transfer_bytes
-from perfect_audio_copy.drive.monitor import DiscEventKind, classify_event
+from discproof.drive.enumerate import list_drives, max_transfer_bytes
+from discproof.drive.monitor import DiscEventKind, classify_event
 
 
 def make_sysfs(root: Path, name: str, vendor: str, model: str, kb: str = "512") -> None:

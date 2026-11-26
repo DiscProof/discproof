@@ -8,8 +8,8 @@ import os
 import pytest
 from fakes import FakeTransport, check_condition, sequence
 
-from perfect_audio_copy.drive import sense as s
-from perfect_audio_copy.drive.transport import RawResult, SgIoHdr, SgioTransport
+from discproof.drive import sense as s
+from discproof.drive.transport import RawResult, SgIoHdr, SgioTransport
 
 TUR = bytes(6)
 

@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 from reports import clean_report, offline_report, troubled_report
 
-from perfect_audio_copy.output.cue import render_cue
-from perfect_audio_copy.output.log import render_log, verify_log
-from perfect_audio_copy.output.report import AlbumReport
+from discproof.output.cue import render_cue
+from discproof.output.log import render_log, verify_log
+from discproof.output.report import AlbumReport
 
 GOLDEN = Path(__file__).parent / "golden"
 CASES = {"clean": clean_report, "troubled": troubled_report, "offline": offline_report}
@@ -51,7 +51,7 @@ def test_report_ok_flags() -> None:
 def test_gap_level_wording() -> None:
     from dataclasses import replace
 
-    from perfect_audio_copy.output.log import gap_level
+    from discproof.output.log import gap_level
 
     assert gap_level(0) == "silent"
     assert gap_level(23) == "near-silent, peak 0.1 %"

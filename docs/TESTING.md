@@ -22,9 +22,9 @@ Plug in the drive, insert a commercially pressed audio CD, then work through the
 
 ### Phase 1 — drive layer
 
-1. Run `.venv/bin/perfect-audio-copy-probe`. The drive should be listed with `access=rw`.
+1. Run `.venv/bin/discproof-probe`. The drive should be listed with `access=rw`.
    If it says `r` only, speed control will be unavailable. If it says `NO ACCESS`, add yourself to the `cdrom` group or log in locally.
-2. Run `.venv/bin/perfect-audio-copy-probe /dev/sr0 --read-test` and check that:
+2. Run `.venv/bin/discproof-probe /dev/sr0 --read-test` and check that:
    - the TOC track count and lengths match the CD's case or a player's display;
    - an Enhanced CD (one with a data track) shows `sessions 2, Enhanced CD`, and its audio lead-out is smaller than its lead-out;
    - the MCN and ISRCs appear if the disc carries them (many discs don't);
@@ -41,7 +41,7 @@ The hardware run above includes `test_secure_rip_is_repeatable`, which secure-ri
 
 ### Phase 3 — verification and drive setup
 
-Run `.venv/bin/python -m perfect_audio_copy.verify.drivecheck` (or `perfect-audio-copy-drivecheck` once the package is reinstalled). Add `--save` to store the result in `~/.config/perfect-audio-copy/drives.toml`. It detects the drive's features, looks it up in the AccurateRip drive offset list, and, if the disc is in AccurateRip, reads three tracks to find the offsets the disc supports. Check that:
+Run `.venv/bin/python -m discproof.verify.drivecheck` (or `discproof-drivecheck` once the package is reinstalled). Add `--save` to store the result in `~/.config/discproof/drives.toml`. It detects the drive's features, looks it up in the AccurateRip drive offset list, and, if the disc is in AccurateRip, reads three tracks to find the offsets the disc supports. Check that:
 
 - the detected cache behaviour matches the drive. The HL-DT-ST GP75N should show `caches audio: yes`, `FUA flush works: no` and `seek-away works: yes`;
 - the drive-list offset is found (GP75N: +6) and appears among the offsets the disc supports;
@@ -54,8 +54,8 @@ There is no separate tool yet (the UI arrives in Phase 6). With a disc inserted,
 
 ```bash
 .venv/bin/python -c "
-from perfect_audio_copy.drive.device import Drive
-from perfect_audio_copy.metadata.service import MetadataService
+from discproof.drive.device import Drive
+from discproof.metadata.service import MetadataService
 with Drive.open('/dev/sr0') as d: info = d.read_disc_info()
 svc = MetadataService(); res = svc.lookup(info)
 print(res.disc_id, res.errors, res.preselected)
@@ -65,7 +65,7 @@ print(svc.cover(res.releases[res.preselected or 0]))"
 
 Check that a common pressed CD is found by disc ID (`exact=True`) and preselected, that the track titles match the case, and that a cover of at least 1000 px is found. Compare the disc ID with what MusicBrainz shows for that release. A disc that MusicBrainz doesn't know should fall back to a TOC match, then Discogs (by its MCN), then CD-Text.
 
-The User-Agent names the app and its home page (`PROJECT_URL` in `src/perfect_audio_copy/__init__.py`), as MusicBrainz asks.
+The User-Agent names the app and its home page (`PROJECT_URL` in `src/discproof/__init__.py`), as MusicBrainz asks.
 
 ### Phase 5 — output
 
@@ -73,14 +73,14 @@ Rip one short track end to end (drive, metadata, AccurateRip, FLAC, tags, cover,
 
 - the FLAC file decodes and plays; `metaflac --list --block-type=VORBIS_COMMENT,PICTURE` shows the tags (Picard mapping: `MUSICBRAINZ_TRACKID` is the recording MBID), ReplayGain values and a 1000 px front cover;
 - `cover.jpg` is at most 1500 px;
-- the log says "Accurately ripped" for a disc in AccurateRip, and its checksum verifies (`perfect_audio_copy.output.log.verify_log`);
+- the log says "Accurately ripped" for a disc in AccurateRip, and its checksum verifies (`discproof.output.log.verify_log`);
 - the CUE sheet names the FLAC files that are next to it.
 
 On 2026-11-22 this was done with the HL-DT-ST GP75N (offset +6, cache defeated by reading elsewhere) on Uncle Tupelo's *Anodyne*, track 2: accurately ripped, confidence 112 (v1 and v2), at 1.2x.
 
 ### Phase 6 — user interface
 
-`perfect-audio-copy --demo` runs the real UI and pipeline against a simulated drive and disc, offline. The demo disc has weak sectors on track 3 and a bad sector on track 5. With a real drive, check that:
+`discproof --demo` runs the real UI and pipeline against a simulated drive and disc, offline. The demo disc has weak sectors on track 3 and a bad sector on track 5. With a real drive, check that:
 
 - inserting a disc reads it and looks it up automatically (udev); ejecting clears it, except after a rip, when the results stay until the next disc;
 - a new, untested drive shows the amber "not set up" banner, and the drive wizard reports the GP75N as caching audio (FUA ignored, cleared by reading elsewhere), with accurate stream and the list offset +6;
@@ -94,7 +94,7 @@ UI logic is tested headlessly through the demo (`tests/ui`), and the smoke tests
 
 - Rip a disc with known pre-gaps (most pressed CDs have 2 s gaps; compare with EAC's or a player's negative countdown). Check the Gap column, the log's "Pre-gap length … (silent)" lines and the CUE sheet's `INDEX 00` entries.
 - A disc with a hidden track before track 1: the log says whether it contains audio, and "Rip as track 00" rips it.
-- Build the RPM (`scripts/build-rpm.sh`), install it, and check that the menu entry and icon appear and that inserting an audio CD offers "Rip with Perfect Audio Copy" in Plasma's device notifier.
+- Build the RPM (`scripts/build-rpm.sh`), install it, and check that the menu entry and icon appear and that inserting an audio CD offers "Rip with DiscProof" in Plasma's device notifier.
 - pipx install plus `--install-desktop`: the menu entry starts the pipx copy.
 
 ### Later phases

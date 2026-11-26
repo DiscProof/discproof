@@ -6,7 +6,7 @@ import struct
 
 from fakes import cdtext_packs, cdtext_response, size_info_pack
 
-from perfect_audio_copy.drive import cdtext as ct
+from discproof.drive import cdtext as ct
 
 
 def album_packs() -> list[bytes]:

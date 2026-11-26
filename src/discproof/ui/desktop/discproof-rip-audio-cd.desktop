@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Service
+X-KDE-Solid-Predicate=[ StorageVolume.ignored == false AND OpticalDisc.availableContent & 'Audio' ]
+Actions=rip;
+X-KDE-Priority=TopLevel
+
+[Desktop Action rip]
+Name=Rip with DiscProof
+Icon=io.github.discproof.DiscProof
+Exec=discproof

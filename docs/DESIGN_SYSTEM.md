@@ -1,8 +1,8 @@
-# Perfect Audio Copy — Design System
+# DiscProof — Design System
 
 > A **soft dark** desktop UI that matches the **portfolio-tracker** project: quiet surfaces, crisp tabular numbers, and colour used only for meaning.
 > Tokens come from portfolio-tracker's `ui/theme/tokens.py` (its `docs/DESIGN_SYSTEM.md` is the reference).
-> Implementation: `src/perfect_audio_copy/ui/qml/Pac/Theme.qml` (QML singleton: the single source of truth) and the `Pac` component module. The Qt palette in `ui/backend/theme.py` mirrors the same colours for popups, tooltips and scroll bars.
+> Implementation: `src/discproof/ui/qml/DiscProof/Theme.qml` (QML singleton: the single source of truth) and the `DiscProof` component module. The Qt palette in `ui/backend/theme.py` mirrors the same colours for popups, tooltips and scroll bars.
 > Rule: **components never hard-code a colour, font size or spacing value.** They reference `Theme`.
 
 The app draws every control itself on top of Qt Quick Controls' **Basic** style. It does not follow the Plasma colour scheme; that is a deliberate choice, so the app looks the same as portfolio-tracker.
@@ -54,7 +54,7 @@ Fonts are bundled under `ui/assets/fonts` (SIL OFL). If they cannot be loaded, t
 
 Spacing `s1…s8` = 4, 8, 12, 16, 20, 24, 32, 40. Radii 4 (badges) / 6 (inputs, buttons) / 10 (cards, dialogs). Header 56, controls 32 (28 compact), table rows 40, badges 22, progress bars 4, sector-map strips 3. Window padding 16, gap between sections 12, card padding 12/16.
 
-## 5. Components (`ui/qml/Pac`)
+## 5. Components (`ui/qml/DiscProof`)
 
 - **Card**: `surface`, 1px `border`, radius 10.
 - **Badge / StatusChip**: uppercase caption on a soft tint. Track statuses: Pending (neutral), Reading/Testing/Encoding (accent), Re-reading (warning, ↻ icon), AR ✓ N (positive, badge-check icon), AR ✗ (warning), OK (positive), Suspicious (negative, ⚠ icon), Error (solid negative).

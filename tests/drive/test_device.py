@@ -23,12 +23,12 @@ from fakes import (
     subchannel_mcn,
 )
 
-from perfect_audio_copy.drive import cdtext as ct
-from perfect_audio_copy.drive import sense as s
-from perfect_audio_copy.drive.constants import C2_SIZE, SECTOR_SIZE, SUBQ_SIZE
-from perfect_audio_copy.drive.device import Drive
-from perfect_audio_copy.drive.subchannel import QPosition, parse_q
-from perfect_audio_copy.drive.transport import RawResult
+from discproof.drive import cdtext as ct
+from discproof.drive import sense as s
+from discproof.drive.constants import C2_SIZE, SECTOR_SIZE, SUBQ_SIZE
+from discproof.drive.device import Drive
+from discproof.drive.subchannel import QPosition, parse_q
+from discproof.drive.transport import RawResult
 
 TRACKS = [(1, 0, 0), (2, 15000, 0), (3, 30000, 0)]
 LEADOUT = 45000

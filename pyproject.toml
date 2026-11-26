@@ -1,5 +1,5 @@
 [project]
-name = "perfect-audio-copy"
+name = "discproof"
 version = "0.1.0.dev0"
 description = "Secure, verified audio CD ripping to FLAC for the Linux desktop"
 readme = "README.md"
@@ -7,8 +7,8 @@ requires-python = ">=3.12"
 license = "GPL-3.0-or-later AND OFL-1.1 AND ISC"
 license-files = [
     "LICENSE",                                               # the app: GPL-3.0-or-later
-    "src/perfect_audio_copy/ui/assets/fonts/*-OFL.txt",      # bundled Inter, JetBrains Mono
-    "src/perfect_audio_copy/ui/assets/icons/LICENSE-lucide.txt",  # bundled Lucide icons
+    "src/discproof/ui/assets/fonts/*-OFL.txt",      # bundled Inter, JetBrains Mono
+    "src/discproof/ui/assets/icons/LICENSE-lucide.txt",  # bundled Lucide icons
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -32,9 +32,9 @@ dependencies = [
 qt-wheel = ["PySide6>=6.6"]
 
 [project.scripts]
-perfect-audio-copy = "perfect_audio_copy.app:main"
-perfect-audio-copy-probe = "perfect_audio_copy.drive.probe:main"
-perfect-audio-copy-drivecheck = "perfect_audio_copy.verify.drivecheck:main"
+discproof = "discproof.app:main"
+discproof-probe = "discproof.drive.probe:main"
+discproof-drivecheck = "discproof.verify.drivecheck:main"
 
 [dependency-groups]
 dev = [
@@ -48,7 +48,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/perfect_audio_copy"]
+packages = ["src/discproof"]
 
 # ---------------------------------------------------------------- tooling
 
@@ -68,26 +68,26 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["PLC0415", "PLR0917"]  # late imports after pytest.importorskip
-"src/perfect_audio_copy/app.py" = ["PLC0415"]  # Qt imported lazily so --version works headless
+"src/discproof/app.py" = ["PLC0415"]  # Qt imported lazily so --version works headless
 # Qt/QML naming: signals, slots and properties are camelCase; "×" is the speed sign.
-"src/perfect_audio_copy/ui/backend/**" = ["N802", "N815", "RUF001", "PLR0915"]
+"src/discproof/ui/backend/**" = ["N802", "N815", "RUF001", "PLR0915"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 mypy_path = "src"
-packages = ["perfect_audio_copy"]
+packages = ["discproof"]
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
 # mutagen ships partial annotations; its untyped calls stay inside this module.
-module = ["perfect_audio_copy.output.tags"]
+module = ["discproof.output.tags"]
 disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
 # Fedora's PySide6 has no stubs, so Qt base classes and @Slot/@Property look untyped.
 # Core packages stay fully strict; only these two checks are relaxed for the UI.
-module = ["perfect_audio_copy.ui.*"]
+module = ["discproof.ui.*"]
 disallow_subclassing_any = false
 disallow_untyped_decorators = false
 

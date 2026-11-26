@@ -5,9 +5,9 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
-from perfect_audio_copy.config.drives import DriveStore, OffsetSource, drive_key
-from perfect_audio_copy.config.tomlw import dumps
-from perfect_audio_copy.engine.profile import CacheDefeat
+from discproof.config.drives import DriveStore, OffsetSource, drive_key
+from discproof.config.tomlw import dumps
+from discproof.engine.profile import CacheDefeat
 
 
 def test_tomlw_roundtrip() -> None:
