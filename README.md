@@ -7,7 +7,7 @@ It is inspired by Exact Audio Copy: it re-reads and compares sectors, corrects t
 
 > **Status:** pre-alpha (0.1.0.dev0). All planned v1 features are in place. See [docs/PLAN.md](docs/PLAN.md) for the roadmap and [docs/BUILD_PROMPT.md](docs/BUILD_PROMPT.md) for the full spec.
 
-Source and issues: https://github.com/perfectaudiocopy/perfect-audio-copy
+Source and issues: https://github.com/DiscProof/discproof
 
 Upgrading from Perfect Audio Copy: the `discproof` RPM replaces the `perfect-audio-copy` package, and on
 first start the app moves `~/.config`, `~/.local/share` and `~/.cache/perfect-audio-copy` to `discproof`
